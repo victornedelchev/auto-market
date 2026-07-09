@@ -20,13 +20,13 @@ export function renderListingCard(listing = {}) {
     } = listing;
 
     return `
-    <div class="col">
+    <div class="col" id="listing-card-${id}">
         <div class="listing-card h-100">
             <div class="card-img-wrapper" style="position: relative;">
                 <img src="${image}" alt="${title}"
                      style="width: 100%; height: 200px; object-fit: cover; display: block;" />
-                <button class="favorite-btn" title="Add to favorites" aria-label="Add to favorites">
-                    <i class="bi bi-heart" style="font-size: 0.95rem;"></i>
+                <button class="favorite-btn" data-id="${id}" title="${listing.isFavorite ? 'Remove from favorites' : 'Add to favorites'}" aria-label="Favorite">
+                    <i class="bi ${listing.isFavorite ? 'bi-heart-fill text-danger' : 'bi-heart'}" style="font-size: 0.95rem;"></i>
                 </button>
                 <span style="
                     position: absolute;

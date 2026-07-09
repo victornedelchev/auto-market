@@ -24,7 +24,7 @@ import { renderDetailsPage, initDetailsPage } from './pages/details/details.js';
 import { renderCreatePage, initCreatePage } from './pages/create/create.js';
 import { renderEditPage, initEditPage } from './pages/edit/edit.js';
 import { renderProfilePage, initProfilePage } from './pages/profile/profile.js';
-import { renderFavoritesPage } from './pages/favorites/favorites.js';
+import { renderFavoritesPage, initFavoritesPage } from './pages/favorites/favorites.js';
 import { renderAdminPage } from './pages/admin/admin.js';
 
 /**
@@ -72,7 +72,7 @@ addRoute('/register', requireGuest(renderRegisterPage), initRegisterPage);
 addRoute('/create', requireAuth(renderCreatePage), initCreatePage);
 addRoute('/edit/:id', requireAuth(renderEditPage), initEditPage);
 addRoute('/profile', requireAuth(renderProfilePage), initProfilePage);
-addRoute('/favorites', requireAuth(renderFavoritesPage));
+addRoute('/favorites', requireAuth(renderFavoritesPage), initFavoritesPage);
 addRoute('/admin', requireAuth(renderAdminPage));
 
 // 404 fallback

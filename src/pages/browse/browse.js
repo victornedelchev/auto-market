@@ -1,8 +1,11 @@
 import { renderSearchFilters } from '../../components/searchFilters/searchFilters.js';
 import { renderListingCard } from '../../components/listingCard/listingCard.js';
 import { renderPagination } from '../../components/pagination/pagination.js';
-import { getListings } from '../../services/listingService.js';
+import { getListings, getFavorites, addFavorite, removeFavorite } from '../../services/listingService.js';
 import { getListingImageUrls } from '../../services/storageService.js';
+import { getUser } from '../../utils/authState.js';
+import { showToast } from '../../utils/toastService.js';
+import { navigateTo } from '../../utils/router.js';
 
 let currentPage = 1;
 const itemsPerPage = 12;
@@ -110,6 +113,42 @@ export function initBrowsePage() {
         });
     }
 
+    // Attach event listener for favorite buttons
+    const grid = document.getElementById('browse-grid');
+    if (grid) {
+        grid.addEventListener('click', async (e) => {
+            const btn = e.target.closest('.favorite-btn');
+            if (!btn) return;
+
+            const user = getUser();
+            if (!user) {
+                showToast('Please log in to add favorites.', 'warning');
+                navigateTo('/login');
+                return;
+            }
+
+            const listingId = btn.getAttribute('data-id');
+            const icon = btn.querySelector('i');
+            const isCurrentlyFavorite = icon.classList.contains('bi-heart-fill');
+
+            try {
+                if (isCurrentlyFavorite) {
+                    await removeFavorite(user.id, listingId);
+                    icon.classList.replace('bi-heart-fill', 'bi-heart');
+                    icon.classList.remove('text-danger');
+                    btn.title = 'Add to favorites';
+                } else {
+                    await addFavorite(user.id, listingId);
+                    icon.classList.replace('bi-heart', 'bi-heart-fill');
+                    icon.classList.add('text-danger');
+                    btn.title = 'Remove from favorites';
+                }
+            } catch (err) {
+                showToast('Failed to update favorites.', 'error');
+            }
+        });
+    }
+
     fetchAndRenderListings();
 }
 
@@ -179,6 +218,16 @@ async function fetchAndRenderListings() {
         
         if (error) throw error;
 
+        // Fetch favorites for current user to mark them in the UI
+        let userFavoriteIds = new Set();
+        const user = getUser();
+        if (user) {
+            const { data: favorites } = await getFavorites(user.id);
+            if (favorites) {
+                userFavoriteIds = new Set(favorites.map(f => f.listing_id));
+            }
+        }
+
         // Fetch cover images in parallel
         const listingsWithImages = await Promise.all((listings || []).map(async (listing) => {
             const { urls } = await getListingImageUrls(listing.id);
@@ -187,6 +236,7 @@ async function fetchAndRenderListings() {
             } else {
                 listing.coverUrl = 'https://dummyimage.com/600x400/e2e8f0/64748b&text=No+Image';
             }
+            listing.isFavorite = userFavoriteIds.has(listing.id);
             return listing;
         }));
 
