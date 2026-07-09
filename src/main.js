@@ -20,7 +20,7 @@ import { renderHomePage } from './pages/home/home.js';
 import { renderLoginPage, initLoginPage } from './pages/login/login.js';
 import { renderRegisterPage, initRegisterPage } from './pages/register/register.js';
 import { renderBrowsePage } from './pages/browse/browse.js';
-import { renderDetailsPage } from './pages/details/details.js';
+import { renderDetailsPage, initDetailsPage } from './pages/details/details.js';
 import { renderCreatePage, initCreatePage } from './pages/create/create.js';
 import { renderEditPage, initEditPage } from './pages/edit/edit.js';
 import { renderProfilePage, initProfilePage } from './pages/profile/profile.js';
@@ -60,7 +60,7 @@ function updateNavbar() {
 // Public routes (accessible to everyone)
 addRoute('/', renderHomePage);
 addRoute('/browse', renderBrowsePage);
-addRoute('/details/:id', renderDetailsPage);
+addRoute('/details/:id', renderDetailsPage, initDetailsPage);
 
 // Guest-only routes (redirect to home if already logged in)
 addRoute('/login', requireGuest(renderLoginPage), initLoginPage);

@@ -3,9 +3,12 @@
  * Premium edit form mirroring the create page style with delete action.
  */
 import { getListingById, updateListing, deleteListing } from '../../services/listingService.js';
-import { getListingImageUrls, uploadMultipleImages, deleteImage } from '../../services/storageService.js';
+import { listImages, getPublicUrl, uploadMultipleImages, deleteImage } from '../../services/storageService.js';
 import { navigateTo } from '../../utils/router.js';
 import { getUser } from '../../utils/authState.js';
+import { validateImageFiles } from '../create/create.js';
+
+let currentImageCount = 0;
 
 /**
  * Render the edit listing page.
@@ -143,7 +146,7 @@ export function renderEditPage(params = {}) {
 
                     <!-- Existing images placeholder -->
                     <div class="mb-3">
-                        <label class="form-label">Current Images (cannot be deleted from UI yet)</label>
+                        <label class="form-label">Current Images</label>
                         <div id="edit-existing-images" class="d-flex gap-2 flex-wrap">
                             <!-- Populated via JS -->
                         </div>
@@ -225,17 +228,7 @@ export async function initEditPage(params) {
         document.getElementById('edit-header-subtitle').textContent = `Update ${listing.title}`;
 
         // Fetch existing images
-        const { urls } = await getListingImageUrls(id);
-        const existingImagesContainer = document.getElementById('edit-existing-images');
-        if (urls && urls.length > 0) {
-            existingImagesContainer.innerHTML = urls.map(url => `
-                <div style="width: 100px; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; position: relative;">
-                    <img src="${url}" style="width: 100%; height: 100%; object-fit: cover;" alt="Listing Image" />
-                </div>
-            `).join('');
-        } else {
-            existingImagesContainer.innerHTML = '<span class="text-muted small">No images uploaded yet.</span>';
-        }
+        await renderExistingImages(id);
 
         // Show form
         loadingDiv.style.display = 'none';
@@ -261,17 +254,26 @@ export async function initEditPage(params) {
 
         imageInput.addEventListener('change', () => {
             previewContainer.innerHTML = '';
-            Array.from(imageInput.files).forEach(file => {
-                if (file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        previewContainer.innerHTML += `
-                            <div style="width: 100px; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;">
-                                <img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover;" alt="Preview" />
-                            </div>`;
-                    };
-                    reader.readAsDataURL(file);
-                }
+            const files = Array.from(imageInput.files);
+            
+            const validationError = validateImageFiles(files, currentImageCount);
+            if (validationError) {
+                showAlert(alertBox, 'danger', validationError);
+                imageInput.value = ''; // clear input
+                return;
+            } else {
+                alertBox.innerHTML = '';
+            }
+
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    previewContainer.innerHTML += `
+                        <div style="width: 100px; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;">
+                            <img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover;" alt="Preview" />
+                        </div>`;
+                };
+                reader.readAsDataURL(file);
             });
         });
 
@@ -302,6 +304,17 @@ async function handleEditSubmit(e, id) {
     submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Saving...';
     alertBox.innerHTML = '';
 
+    const imageInput = document.getElementById('edit-images');
+    const files = Array.from(imageInput.files);
+    
+    const validationError = validateImageFiles(files, currentImageCount);
+    if (validationError) {
+        showAlert(alertBox, 'danger', validationError);
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="bi bi-check-lg me-2"></i>Save Changes';
+        return;
+    }
+
     const updates = {
         title: document.getElementById('edit-title').value.trim(),
         brand: document.getElementById('edit-brand').value.trim(),
@@ -324,10 +337,9 @@ async function handleEditSubmit(e, id) {
         if (error) throw error;
 
         // Upload new images if any
-        const imageInput = document.getElementById('edit-images');
-        if (imageInput.files.length > 0) {
+        if (files.length > 0) {
             submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Uploading images...';
-            await uploadMultipleImages(id, imageInput.files);
+            await uploadMultipleImages(id, files);
         }
 
         showAlert(alertBox, 'success', 'Listing updated successfully!');
@@ -343,6 +355,52 @@ async function handleEditSubmit(e, id) {
         submitBtn.innerHTML = '<i class="bi bi-check-lg me-2"></i>Save Changes';
     }
 }
+
+/**
+ * Fetch and render existing images with delete capability.
+ */
+async function renderExistingImages(listingId) {
+    const { data: files } = await listImages(listingId);
+    const container = document.getElementById('edit-existing-images');
+    
+    if (!files || files.length === 0) {
+        container.innerHTML = '<span class="text-muted small">No images uploaded yet.</span>';
+        currentImageCount = 0;
+        return;
+    }
+
+    const validFiles = files.filter(f => !f.name.startsWith('.'));
+    currentImageCount = validFiles.length;
+
+    container.innerHTML = validFiles.map((file, index) => {
+        const filePath = `${listingId}/${file.name}`;
+        const url = getPublicUrl(filePath);
+        const isCover = index === 0;
+        return `
+            <div style="width: 100px; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid ${isCover ? 'var(--am-primary)' : '#e2e8f0'}; position: relative; group">
+                <img src="${url}" style="width: 100%; height: 100%; object-fit: cover;" alt="Listing Image" />
+                ${isCover ? '<div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(37,99,235,0.9); color: white; font-size: 0.6rem; text-align: center; padding: 2px;">COVER</div>' : ''}
+                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-1" aria-label="Delete image" style="background-color: rgba(220, 53, 69, 0.8); width: 0.5rem; height: 0.5rem;" data-path="${filePath}" onclick="window.handleDeleteImage('${filePath}', '${listingId}')"></button>
+            </div>
+        `;
+    }).join('');
+}
+
+/**
+ * Handle deleting a single image. Exposed globally for inline onclick.
+ */
+window.handleDeleteImage = async (filePath, listingId) => {
+    if (!confirm('Delete this image permanently?')) return;
+    
+    const { error } = await deleteImage(filePath);
+    if (error) {
+        alert('Failed to delete image: ' + error.message);
+        return;
+    }
+    
+    // Refresh images
+    await renderExistingImages(listingId);
+};
 
 /**
  * Handle listing deletion.

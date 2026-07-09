@@ -177,26 +177,64 @@ export function initCreatePage() {
         });
     }
 
-    // Basic image preview
+    // Basic image preview and validation
     const imageInput = document.getElementById('create-images');
     const previewContainer = document.getElementById('images-preview');
     if (imageInput && previewContainer) {
         imageInput.addEventListener('change', () => {
             previewContainer.innerHTML = '';
-            Array.from(imageInput.files).forEach(file => {
-                if (file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        previewContainer.innerHTML += `
-                            <div style="width: 100px; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;">
-                                <img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover;" alt="Preview" />
-                            </div>`;
-                    };
-                    reader.readAsDataURL(file);
-                }
+            const files = Array.from(imageInput.files);
+            
+            const validationError = validateImageFiles(files, 0);
+            if (validationError) {
+                const alertBox = document.getElementById('create-alert');
+                if (alertBox) showAlert(alertBox, 'danger', validationError);
+                imageInput.value = ''; // clear input
+                return;
+            } else {
+                const alertBox = document.getElementById('create-alert');
+                if (alertBox) alertBox.innerHTML = ''; // Clear previous error
+            }
+
+            files.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const isCover = index === 0;
+                    previewContainer.innerHTML += `
+                        <div style="width: 100px; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid ${isCover ? 'var(--am-primary)' : '#e2e8f0'}; position: relative;">
+                            ${isCover ? '<div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(37,99,235,0.9); color: white; font-size: 0.6rem; text-align: center; padding: 2px;">COVER</div>' : ''}
+                            <img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover;" alt="Preview" />
+                        </div>`;
+                };
+                reader.readAsDataURL(file);
             });
         });
     }
+}
+
+/**
+ * Validate image files.
+ * @param {File[]} files 
+ * @param {number} currentCount 
+ * @returns {string|null} Error message or null
+ */
+export function validateImageFiles(files, currentCount = 0) {
+    if (files.length + currentCount > 10) {
+        return `You can only upload a total of 10 images.`;
+    }
+
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const maxSize = 5 * 1024 * 1024; // 5MB
+
+    for (const file of files) {
+        if (!validTypes.includes(file.type)) {
+            return `File "${file.name}" has an invalid format. Only JPG, PNG, and WebP are allowed.`;
+        }
+        if (file.size > maxSize) {
+            return `File "${file.name}" is too large. Maximum size is 5MB.`;
+        }
+    }
+    return null;
 }
 
 /**
@@ -229,6 +267,18 @@ async function handleCreateSubmit(e) {
     alertBox.innerHTML = '';
 
     // Gather data
+    const imageInput = document.getElementById('create-images');
+    const files = Array.from(imageInput.files);
+    
+    // Validate images before creating the listing record
+    const validationError = validateImageFiles(files, 0);
+    if (validationError) {
+        showAlert(alertBox, 'danger', validationError);
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="bi bi-rocket-takeoff me-2"></i>Publish Listing';
+        return;
+    }
+
     const listingData = {
         seller_id: user.id,
         title: document.getElementById('create-title').value.trim(),
@@ -256,12 +306,9 @@ async function handleCreateSubmit(e) {
         }
 
         // 2. Upload images if any
-        const imageInput = document.getElementById('create-images');
-        if (imageInput.files.length > 0) {
-            // Note: We're calling uploadMultipleImages but not waiting for it completely,
-            // or we can wait for it. Waiting ensures all images are uploaded before redirecting.
+        if (files.length > 0) {
             submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Uploading images...';
-            const { failed } = await uploadMultipleImages(newListing.id, imageInput.files);
+            const { failed } = await uploadMultipleImages(newListing.id, files);
             if (failed.length > 0) {
                 console.warn('Some images failed to upload:', failed);
             }

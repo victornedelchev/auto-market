@@ -3,6 +3,7 @@
  * Premium layout with gallery, specs, seller info, and action buttons.
  */
 import { renderImageGallery } from '../../components/imageGallery/imageGallery.js';
+import { getListingImageUrls } from '../../services/storageService.js';
 
 /**
  * Render the listing details page.
@@ -32,7 +33,7 @@ export function renderDetailsPage(params = {}) {
 
         <div class="row g-4">
             <!-- Image Gallery -->
-            <div class="col-lg-7">
+            <div class="col-lg-7" id="details-gallery-container">
                 ${gallery}
             </div>
 
@@ -184,4 +185,25 @@ export function renderDetailsPage(params = {}) {
             </div>
         </div>
     </div>`;
+}
+
+/**
+ * Initialize the details page.
+ * @param {Object} params
+ */
+export async function initDetailsPage(params = {}) {
+    const { id } = params;
+    if (!id || id === 'unknown') return;
+
+    try {
+        const { urls } = await getListingImageUrls(id);
+        if (urls && urls.length > 0) {
+            const galleryContainer = document.getElementById('details-gallery-container');
+            if (galleryContainer) {
+                galleryContainer.innerHTML = renderImageGallery(urls);
+            }
+        }
+    } catch (err) {
+        console.error('Failed to load listing images:', err);
+    }
 }
