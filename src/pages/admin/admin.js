@@ -272,6 +272,12 @@ export function initAdminPage() {
         const toggleBtn = e.target.closest('.dropdown-toggle');
         if (toggleBtn) {
             import('bootstrap').then(({ Dropdown }) => {
+                document.querySelectorAll('.dropdown-toggle.show').forEach(el => {
+                    if (el !== toggleBtn) {
+                        const d = Dropdown.getInstance(el);
+                        if (d) d.hide();
+                    }
+                });
                 const dropdown = Dropdown.getOrCreateInstance(toggleBtn);
                 dropdown.toggle();
             });
@@ -326,6 +332,12 @@ export function initAdminPage() {
         const toggleBtn = e.target.closest('.dropdown-toggle');
         if (toggleBtn) {
             import('bootstrap').then(({ Dropdown }) => {
+                document.querySelectorAll('.dropdown-toggle.show').forEach(el => {
+                    if (el !== toggleBtn) {
+                        const d = Dropdown.getInstance(el);
+                        if (d) d.hide();
+                    }
+                });
                 const dropdown = Dropdown.getOrCreateInstance(toggleBtn);
                 dropdown.toggle();
             });
