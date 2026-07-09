@@ -275,7 +275,7 @@ function buildProfileView(user, profile, stats, listings, listingImages = {}) {
             ${listings.length > 0 
                 ? `<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-4">
                        ${listings.map(l => {
-                           const coverImage = listingImages[l.id] || 'https://placehold.co/400x250/1e293b/94a3b8?text=No+Image';
+                           const coverImage = listingImages[l.id] || 'https://dummyimage.com/400x250/1e293b/94a3b8&text=No+Image';
                            const displayListing = {
                                ...l,
                                image: coverImage,

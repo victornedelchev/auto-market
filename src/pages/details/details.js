@@ -14,9 +14,9 @@ export function renderDetailsPage(params = {}) {
     const { id = 'unknown' } = params;
 
     const gallery = renderImageGallery([
-        'https://placehold.co/800x400/1e293b/64748b?text=Front+View',
-        'https://placehold.co/800x400/1e293b/64748b?text=Side+View',
-        'https://placehold.co/800x400/1e293b/64748b?text=Interior',
+        'https://dummyimage.com/800x400/1e293b/64748b&text=Front+View',
+        'https://dummyimage.com/800x400/1e293b/64748b&text=Side+View',
+        'https://dummyimage.com/800x400/1e293b/64748b&text=Interior',
     ]);
 
     return `

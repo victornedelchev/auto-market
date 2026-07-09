@@ -12,7 +12,7 @@ export function renderListingCard(listing = {}) {
     const {
         id = '',
         title = 'Car Title',
-        image = 'https://placehold.co/400x250/1e293b/94a3b8?text=No+Image',
+        image = 'https://dummyimage.com/400x250/1e293b/94a3b8&text=No+Image',
         price = 0,
         year = new Date().getFullYear(),
         fuel = 'N/A',
