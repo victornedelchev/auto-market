@@ -4,9 +4,13 @@
  * All modules read auth state from here instead of calling Supabase directly.
  */
 import { getSession, onAuthStateChange } from '../services/authService.js';
+import { getProfile } from '../services/profileService.js';
 
 /** @type {import('@supabase/supabase-js').User|null} */
 let currentUser = null;
+
+/** @type {Object|null} */
+let currentProfile = null;
 
 /** @type {Array<Function>} */
 const listeners = [];
@@ -21,10 +25,20 @@ export async function initAuth() {
   // Restore session from Supabase (persisted in localStorage by default)
   const { data } = await getSession();
   currentUser = data?.session?.user ?? null;
+  if (currentUser) {
+      const { data: profile } = await getProfile(currentUser.id);
+      currentProfile = profile;
+  }
 
   // Subscribe to future auth events (login, logout, token refresh)
-  onAuthStateChange((_event, session) => {
+  onAuthStateChange(async (_event, session) => {
     currentUser = session?.user ?? null;
+    if (currentUser) {
+        const { data: profile } = await getProfile(currentUser.id);
+        currentProfile = profile;
+    } else {
+        currentProfile = null;
+    }
     notifyListeners();
   });
 }
@@ -43,6 +57,25 @@ export function getUser() {
  */
 export function isAuthenticated() {
   return currentUser !== null;
+}
+
+/**
+ * Get the currently authenticated user's profile (synchronous).
+ * @returns {Object|null}
+ */
+export function getUserProfile() {
+  return currentProfile;
+}
+
+/**
+ * Force a refresh of the cached profile and notify listeners (e.g. navbar).
+ */
+export async function forceProfileRefresh() {
+    if (currentUser) {
+        const { data } = await getProfile(currentUser.id);
+        currentProfile = data;
+        notifyListeners();
+    }
 }
 
 /**

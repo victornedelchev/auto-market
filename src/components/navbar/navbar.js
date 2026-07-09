@@ -3,7 +3,7 @@
  * Premium dark gradient navbar with animated brand and modern navigation.
  * Auth-aware: shows Login/Sign Up for guests, Profile/Logout for authenticated users.
  */
-import { getUser } from '../../utils/authState.js';
+import { getUser, getUserProfile } from '../../utils/authState.js';
 import { logout } from '../../services/authService.js';
 import { navigateTo } from '../../utils/router.js';
 
@@ -124,15 +124,15 @@ function renderGuestButtons() {
  * @returns {string}
  */
 function renderUserMenu(user) {
-    const displayName = user.user_metadata?.first_name
+    const profile = getUserProfile();
+    const displayName = profile?.full_name?.split(' ')[0]
+        || user.user_metadata?.first_name
         || user.email?.split('@')[0]
         || 'User';
 
-    return `
-    <div class="d-flex align-items-center gap-2">
-        <a href="#/profile" class="btn btn-sm px-3 py-2 d-flex align-items-center gap-2"
-           style="color: rgba(255,255,255,0.8); font-weight: 500; transition: var(--am-transition-fast);">
-            <span style="
+    const avatarHtml = profile?.avatar_url
+        ? `<img src="${profile.avatar_url}" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover;" alt="Avatar" />`
+        : `<span style="
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
@@ -143,7 +143,13 @@ function renderUserMenu(user) {
                 font-size: 0.75rem;
                 color: #fff;
                 font-weight: 600;
-            ">${displayName.charAt(0).toUpperCase()}</span>
+            ">${displayName.charAt(0).toUpperCase()}</span>`;
+
+    return `
+    <div class="d-flex align-items-center gap-2">
+        <a href="#/profile" class="btn btn-sm px-3 py-2 d-flex align-items-center gap-2"
+           style="color: rgba(255,255,255,0.8); font-weight: 500; transition: var(--am-transition-fast);">
+            ${avatarHtml}
             ${displayName}
         </a>
         <button type="button" class="btn btn-sm px-3 py-2" id="logout-btn"

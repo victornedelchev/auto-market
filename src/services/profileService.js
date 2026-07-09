@@ -1,7 +1,7 @@
 /**
  * Profile Service.
  * Handles user profile CRUD via Supabase Database.
- * Assumes a "profiles" table exists (typically auto-created via a trigger on auth.users).
+ * Profile records are auto-created by a trigger on auth.users.
  */
 import { supabase } from './supabase.js';
 
@@ -25,7 +25,7 @@ export async function getProfile(userId) {
 /**
  * Update a user's profile.
  * @param {string} userId
- * @param {Object} updates - Fields to update (e.g. { first_name, last_name, avatar_url, phone }).
+ * @param {Object} updates - Fields to update (e.g. { full_name, phone, city, avatar_url }).
  * @returns {Promise<{ data: Object|null, error: Object|null }>}
  */
 export async function updateProfile(userId, updates) {
@@ -41,14 +41,17 @@ export async function updateProfile(userId, updates) {
 
 /**
  * Upload a user avatar image to Supabase Storage.
- * Stores under "avatars/{userId}.{ext}".
+ * Stores under "avatars/{userId}/{timestamp}.{ext}" so RLS policies work.
  * @param {string} userId
  * @param {File} file
  * @returns {Promise<{ url: string|null, error: Object|null }>}
  */
 export async function uploadAvatar(userId, file) {
     const ext = file.name.split('.').pop();
-    const filePath = `${userId}.${ext}`;
+    const filePath = `${userId}/${Date.now()}.${ext}`;
+
+    // Delete existing avatars for this user first
+    await deleteUserAvatarFiles(userId);
 
     const { error: uploadError } = await supabase.storage
         .from('avatars')
@@ -75,6 +78,40 @@ export async function uploadAvatar(userId, file) {
 }
 
 /**
+ * Remove the user's avatar — deletes files from storage and clears avatar_url.
+ * @param {string} userId
+ * @returns {Promise<{ error: Object|null }>}
+ */
+export async function removeAvatar(userId) {
+    // Delete files from storage
+    await deleteUserAvatarFiles(userId);
+
+    // Clear avatar_url on the profile
+    const { error } = await supabase
+        .from(TABLE)
+        .update({ avatar_url: null })
+        .eq('id', userId);
+
+    return { error };
+}
+
+/**
+ * Delete all avatar files for a user from storage.
+ * @param {string} userId
+ * @returns {Promise<void>}
+ */
+async function deleteUserAvatarFiles(userId) {
+    const { data: files } = await supabase.storage
+        .from('avatars')
+        .list(userId);
+
+    if (files && files.length > 0) {
+        const paths = files.map((f) => `${userId}/${f.name}`);
+        await supabase.storage.from('avatars').remove(paths);
+    }
+}
+
+/**
  * Get the public stats for a user (listing count, favorites count).
  * @param {string} userId
  * @returns {Promise<{ listings: number, favorites: number, error: Object|null }>}
@@ -82,9 +119,9 @@ export async function uploadAvatar(userId, file) {
 export async function getUserStats(userId) {
     const [listingsResult, favoritesResult] = await Promise.all([
         supabase
-            .from('listings')
+            .from('car_listings')
             .select('id', { count: 'exact', head: true })
-            .eq('user_id', userId),
+            .eq('seller_id', userId),
         supabase
             .from('favorites')
             .select('id', { count: 'exact', head: true })
@@ -100,15 +137,15 @@ export async function getUserStats(userId) {
 
 /**
  * Check if a user has admin role.
- * Assumes a "role" column exists on the profiles table.
+ * Queries the user_roles table.
  * @param {string} userId
  * @returns {Promise<boolean>}
  */
 export async function isAdmin(userId) {
     const { data, error } = await supabase
-        .from(TABLE)
+        .from('user_roles')
         .select('role')
-        .eq('id', userId)
+        .eq('user_id', userId)
         .single();
 
     if (error || !data) return false;
