@@ -5,7 +5,7 @@
  */
 import { supabase } from './supabase.js';
 
-const TABLE = 'listings';
+const TABLE = 'car_listings';
 
 /**
  * Fetch all listings with optional filters, sorting, and pagination.
@@ -127,7 +127,7 @@ export async function getListingsByUser(userId, { page = 1, limit = 12 } = {}) {
     const { data, count, error } = await supabase
         .from(TABLE)
         .select('*', { count: 'exact' })
-        .eq('user_id', userId)
+        .eq('seller_id', userId)
         .order('created_at', { ascending: false })
         .range(from, to);
 
@@ -143,7 +143,7 @@ export async function getListingsByUser(userId, { page = 1, limit = 12 } = {}) {
 export async function getFavorites(userId) {
     const { data, error } = await supabase
         .from('favorites')
-        .select('listing_id, listings(*)')
+        .select('listing_id, car_listings(*)')
         .eq('user_id', userId);
 
     return { data, error };

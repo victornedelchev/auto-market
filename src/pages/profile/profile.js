@@ -5,6 +5,9 @@
  */
 import { getUser, forceProfileRefresh } from '../../utils/authState.js';
 import { getProfile, updateProfile, uploadAvatar, removeAvatar, getUserStats } from '../../services/profileService.js';
+import { getListingsByUser } from '../../services/listingService.js';
+import { getListingImageUrls } from '../../services/storageService.js';
+import { renderListingCard } from '../../components/listingCard/listingCard.js';
 
 /**
  * Render the profile page (loading state initially).
@@ -29,34 +32,44 @@ export async function initProfilePage() {
     const user = getUser();
     if (!user) return;
 
-    const [profileResult, statsResult] = await Promise.all([
+    const [profileResult, statsResult, listingsResult] = await Promise.all([
         getProfile(user.id),
         getUserStats(user.id),
+        getListingsByUser(user.id)
     ]);
 
     const profile = profileResult.data;
     const stats = statsResult;
+    const listings = listingsResult.data || [];
     const container = document.getElementById('profile-page');
 
     if (!profile || profileResult.error) {
+        console.error('Failed to load profile:', profileResult.error);
         container.innerHTML = `
-            <div class="container py-5">
-                <div class="alert alert-danger">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                    Failed to load profile. Please try again later.
-                </div>
-            </div>`;
+            <div class="alert alert-danger m-5">Failed to load profile.</div>
+        `;
         return;
     }
 
-    container.innerHTML = buildProfileView(user, profile, stats);
+    // Fetch cover image for each listing
+    const listingImages = {};
+    if (listings.length > 0) {
+        await Promise.all(listings.map(async (l) => {
+            const { urls } = await getListingImageUrls(l.id);
+            if (urls && urls.length > 0) {
+                listingImages[l.id] = urls[0];
+            }
+        }));
+    }
+
+    container.innerHTML = buildProfileView(user, profile, stats, listings, listingImages);
     attachViewListeners(user, profile, stats);
 }
 
 /**
  * Build the full profile view HTML.
  */
-function buildProfileView(user, profile, stats) {
+function buildProfileView(user, profile, stats, listings, listingImages = {}) {
     const initials = getInitials(profile.full_name || user.email);
     const displayName = profile.full_name || user.email.split('@')[0];
     const memberSince = new Date(profile.created_at).toLocaleDateString('en-US', {
@@ -243,6 +256,50 @@ function buildProfileView(user, profile, stats) {
                 </div>
             </div>
         </div>
+
+        <!-- User Listings -->
+        <div id="profile-listings-section">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="section-header mb-0">
+                    <div class="section-icon"><i class="bi bi-grid-3x3-gap-fill"></i></div>
+                    <div>
+                        <h2 style="font-size: 1.4rem;">My Listings</h2>
+                        <span class="section-subtitle">Cars you currently have for sale</span>
+                    </div>
+                </div>
+                <a href="#/create" class="btn btn-am-primary btn-sm">
+                    <i class="bi bi-plus-lg me-1"></i>New Listing
+                </a>
+            </div>
+            
+            ${listings.length > 0 
+                ? `<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-4">
+                       ${listings.map(l => {
+                           const coverImage = listingImages[l.id] || 'https://placehold.co/400x250/1e293b/94a3b8?text=No+Image';
+                           const displayListing = {
+                               ...l,
+                               image: coverImage,
+                               fuel: l.fuel_type || 'N/A'
+                           };
+                           // We will inject a custom edit button by wrapping the card
+                           const cardHtml = renderListingCard(displayListing);
+                           return `
+                           <div class="position-relative">
+                               ${cardHtml}
+                               <a href="#/edit/${l.id}" class="btn btn-sm btn-am-primary position-absolute" style="top: 15px; right: 25px; z-index: 10; border-radius: 6px; box-shadow: var(--am-shadow);">
+                                   <i class="bi bi-pencil-square me-1"></i>Edit
+                               </a>
+                           </div>`;
+                       }).join('')}
+                   </div>`
+                : `<div class="text-center py-5 mb-4" style="background: var(--am-light); border-radius: var(--am-radius); border: 2px dashed #e2e8f0;">
+                       <i class="bi bi-car-front text-muted" style="font-size: 3rem;"></i>
+                       <h4 class="mt-3" style="color: var(--am-dark-700);">No listings yet</h4>
+                       <p class="text-muted">You haven't posted any cars for sale.</p>
+                       <a href="#/create" class="btn btn-am-primary mt-2">Create your first listing</a>
+                   </div>`
+            }
+        </div>
     </div>`;
 }
 
@@ -386,9 +443,25 @@ async function handleSaveProfile(e, user, profile, stats) {
         await forceProfileRefresh();
 
         // Re-fetch and re-render the whole page
-        const { data: updatedProfile } = await getProfile(user.id);
+        const [profileResult, listingsResult] = await Promise.all([
+            getProfile(user.id),
+            getListingsByUser(user.id)
+        ]);
+        const updatedProfile = profileResult.data;
+        const updatedListings = listingsResult.data || [];
+        
+        const updatedListingImages = {};
+        if (updatedListings.length > 0) {
+            await Promise.all(updatedListings.map(async (l) => {
+                const { urls } = await getListingImageUrls(l.id);
+                if (urls && urls.length > 0) {
+                    updatedListingImages[l.id] = urls[0];
+                }
+            }));
+        }
+
         const container = document.getElementById('profile-page');
-        container.innerHTML = buildProfileView(user, updatedProfile || profile, stats);
+        container.innerHTML = buildProfileView(user, updatedProfile || profile, stats, updatedListings, updatedListingImages);
         attachViewListeners(user, updatedProfile || profile, stats);
 
         // Show success alert in the new view
@@ -430,9 +503,25 @@ async function handleRemoveAvatar(user, profile, stats) {
         await forceProfileRefresh();
 
         // Re-fetch and re-render
-        const { data: updatedProfile } = await getProfile(user.id);
+        const [profileResult, listingsResult] = await Promise.all([
+            getProfile(user.id),
+            getListingsByUser(user.id)
+        ]);
+        const updatedProfile = profileResult.data;
+        const updatedListings = listingsResult.data || [];
+
+        const updatedListingImages = {};
+        if (updatedListings.length > 0) {
+            await Promise.all(updatedListings.map(async (l) => {
+                const { urls } = await getListingImageUrls(l.id);
+                if (urls && urls.length > 0) {
+                    updatedListingImages[l.id] = urls[0];
+                }
+            }));
+        }
+
         const container = document.getElementById('profile-page');
-        container.innerHTML = buildProfileView(user, updatedProfile || profile, stats);
+        container.innerHTML = buildProfileView(user, updatedProfile || profile, stats, updatedListings, updatedListingImages);
         attachViewListeners(user, updatedProfile || profile, stats);
 
         toggleEditSection(true);

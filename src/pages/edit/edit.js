@@ -2,6 +2,10 @@
  * Edit Listing page.
  * Premium edit form mirroring the create page style with delete action.
  */
+import { getListingById, updateListing, deleteListing } from '../../services/listingService.js';
+import { getListingImageUrls, uploadMultipleImages, deleteImage } from '../../services/storageService.js';
+import { navigateTo } from '../../utils/router.js';
+import { getUser } from '../../utils/authState.js';
 
 /**
  * Render the edit listing page.
@@ -22,7 +26,7 @@ export function renderEditPage(params = {}) {
                 </div>
                 <div>
                     <h1 style="font-family: var(--am-font-display); font-weight: 800; font-size: 1.8rem; color: #fff; margin: 0;">Edit Listing</h1>
-                    <p style="color: rgba(255,255,255,0.5); font-size: 0.9rem; margin: 0;">Update listing #${id}</p>
+                    <p style="color: rgba(255,255,255,0.5); font-size: 0.9rem; margin: 0;" id="edit-header-subtitle">Loading listing details...</p>
                 </div>
             </div>
         </div>
@@ -30,7 +34,14 @@ export function renderEditPage(params = {}) {
 
     <div class="container" style="margin-top: -1.5rem; position: relative; z-index: 2; margin-bottom: 2rem;">
         <div class="card-am-static">
-            <form id="edit-listing-form" data-listing-id="${id}">
+            <div id="edit-alert" class="m-4 mb-0"></div>
+            
+            <div id="edit-loading" class="p-5 text-center">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-3 text-muted">Fetching listing data...</p>
+            </div>
+
+            <form id="edit-listing-form" data-listing-id="${id}" class="needs-validation" novalidate style="display: none;">
                 <!-- Section 1: Vehicle Info -->
                 <div class="p-4" style="border-bottom: 1px solid #e2e8f0;">
                     <div class="section-header">
@@ -42,44 +53,48 @@ export function renderEditPage(params = {}) {
                     </div>
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label for="edit-title" class="form-label">Listing Title</label>
+                            <label for="edit-title" class="form-label">Listing Title *</label>
                             <input type="text" class="form-control" id="edit-title" required />
+                            <div class="invalid-feedback">Please enter a title.</div>
                         </div>
                         <div class="col-md-3">
-                            <label for="edit-make" class="form-label">Make</label>
-                            <select class="form-select" id="edit-make" required>
-                                <option value="">Select make</option>
-                            </select>
+                            <label for="edit-brand" class="form-label">Make (Brand) *</label>
+                            <input type="text" class="form-control" id="edit-brand" required />
+                            <div class="invalid-feedback">Please enter a brand.</div>
                         </div>
                         <div class="col-md-3">
-                            <label for="edit-model" class="form-label">Model</label>
+                            <label for="edit-model" class="form-label">Model *</label>
                             <input type="text" class="form-control" id="edit-model" required />
+                            <div class="invalid-feedback">Please enter a model.</div>
                         </div>
                         <div class="col-md-3">
-                            <label for="edit-year" class="form-label">Year</label>
-                            <input type="number" class="form-control" id="edit-year" required />
+                            <label for="edit-year" class="form-label">Year *</label>
+                            <input type="number" class="form-control" id="edit-year" min="1900" max="${new Date().getFullYear() + 1}" required />
+                            <div class="invalid-feedback">Enter a valid year.</div>
                         </div>
                         <div class="col-md-3">
-                            <label for="edit-price" class="form-label">Price (&euro;)</label>
-                            <input type="number" class="form-control" id="edit-price" required />
+                            <label for="edit-price" class="form-label">Price (&euro;) *</label>
+                            <input type="number" class="form-control" id="edit-price" min="1" required />
+                            <div class="invalid-feedback">Enter a valid price.</div>
                         </div>
                         <div class="col-md-3">
                             <label for="edit-mileage" class="form-label">Mileage (km)</label>
-                            <input type="number" class="form-control" id="edit-mileage" required />
+                            <input type="number" class="form-control" id="edit-mileage" min="0" />
                         </div>
                         <div class="col-md-3">
-                            <label for="edit-fuel" class="form-label">Fuel Type</label>
-                            <select class="form-select" id="edit-fuel" required>
+                            <label for="edit-fuel_type" class="form-label">Fuel Type</label>
+                            <select class="form-select" id="edit-fuel_type">
                                 <option value="">Select</option>
-                                <option value="petrol">Petrol</option>
+                                <option value="gasoline">Petrol / Gasoline</option>
                                 <option value="diesel">Diesel</option>
                                 <option value="electric">Electric</option>
                                 <option value="hybrid">Hybrid</option>
+                                <option value="lpg">LPG</option>
                             </select>
                         </div>
                         <div class="col-md-3">
                             <label for="edit-transmission" class="form-label">Transmission</label>
-                            <select class="form-select" id="edit-transmission" required>
+                            <select class="form-select" id="edit-transmission">
                                 <option value="">Select</option>
                                 <option value="automatic">Automatic</option>
                                 <option value="manual">Manual</option>
@@ -90,11 +105,15 @@ export function renderEditPage(params = {}) {
                             <input type="text" class="form-control" id="edit-engine" />
                         </div>
                         <div class="col-md-3">
+                            <label for="edit-horsepower" class="form-label">Horsepower (HP)</label>
+                            <input type="number" class="form-control" id="edit-horsepower" min="1" />
+                        </div>
+                        <div class="col-md-3">
                             <label for="edit-color" class="form-label">Color</label>
                             <input type="text" class="form-control" id="edit-color" />
                         </div>
                         <div class="col-md-3">
-                            <label for="edit-location" class="form-label">Location</label>
+                            <label for="edit-location" class="form-label">Location (City)</label>
                             <input type="text" class="form-control" id="edit-location" />
                         </div>
                     </div>
@@ -123,23 +142,19 @@ export function renderEditPage(params = {}) {
                     </div>
 
                     <!-- Existing images placeholder -->
-                    <div id="edit-existing-images" class="mb-3">
-                        <div class="d-flex gap-2 flex-wrap">
-                            <div style="width: 100px; height: 80px; border-radius: 8px; background: var(--am-light); display: flex; align-items: center; justify-content: center; border: 1px solid #e2e8f0;">
-                                <i class="bi bi-image" style="color: var(--am-gray-light); font-size: 1.5rem;"></i>
-                            </div>
-                            <div style="width: 100px; height: 80px; border-radius: 8px; background: var(--am-light); display: flex; align-items: center; justify-content: center; border: 1px solid #e2e8f0;">
-                                <i class="bi bi-image" style="color: var(--am-gray-light); font-size: 1.5rem;"></i>
-                            </div>
+                    <div class="mb-3">
+                        <label class="form-label">Current Images (cannot be deleted from UI yet)</label>
+                        <div id="edit-existing-images" class="d-flex gap-2 flex-wrap">
+                            <!-- Populated via JS -->
                         </div>
-                        <small style="color: var(--am-gray-light); display: block; margin-top: 0.5rem;">Existing images will load from Supabase</small>
                     </div>
 
-                    <div style="border: 2px dashed #e2e8f0; border-radius: var(--am-radius); padding: 1.5rem; text-align: center;">
+                    <div id="edit-image-dropzone" style="border: 2px dashed #e2e8f0; border-radius: var(--am-radius); padding: 1.5rem; text-align: center; cursor: pointer; transition: all 0.2s ease;">
                         <i class="bi bi-cloud-arrow-up" style="font-size: 1.8rem; color: var(--am-primary-light);"></i>
                         <p style="color: var(--am-dark-600); font-weight: 500; font-size: 0.9rem; margin: 0.5rem 0 0.25rem;">Upload additional images</p>
                         <input class="form-control mt-2" type="file" id="edit-images" multiple accept="image/*" style="max-width: 280px; margin: 0 auto;" />
                     </div>
+                    <div id="edit-images-preview" class="d-flex gap-2 flex-wrap mt-3"></div>
                 </div>
 
                 <!-- Actions -->
@@ -149,7 +164,7 @@ export function renderEditPage(params = {}) {
                     </button>
                     <div class="d-flex gap-2">
                         <a href="#/details/${id}" class="btn btn-am-outline">Cancel</a>
-                        <button type="submit" class="btn btn-am-primary px-4">
+                        <button type="submit" class="btn btn-am-primary px-4" id="submit-edit-btn">
                             <i class="bi bi-check-lg me-2"></i>Save Changes
                         </button>
                     </div>
@@ -157,4 +172,214 @@ export function renderEditPage(params = {}) {
             </form>
         </div>
     </div>`;
+}
+
+/**
+ * Initialize the edit page.
+ * @param {Object} params 
+ */
+export async function initEditPage(params) {
+    const { id } = params;
+    const form = document.getElementById('edit-listing-form');
+    if (!form) return;
+
+    const alertBox = document.getElementById('edit-alert');
+    const loadingDiv = document.getElementById('edit-loading');
+    const user = getUser();
+
+    if (!user) {
+        navigateTo('/login');
+        return;
+    }
+
+    try {
+        // Fetch listing data
+        const { data: listing, error } = await getListingById(id);
+
+        if (error || !listing) {
+            throw error || new Error('Listing not found');
+        }
+
+        // Ownership check
+        if (listing.seller_id !== user.id) {
+            showAlert(alertBox, 'danger', 'You do not have permission to edit this listing.');
+            loadingDiv.style.display = 'none';
+            return;
+        }
+
+        // Populate fields
+        document.getElementById('edit-title').value = listing.title || '';
+        document.getElementById('edit-brand').value = listing.brand || '';
+        document.getElementById('edit-model').value = listing.model || '';
+        document.getElementById('edit-year').value = listing.year || '';
+        document.getElementById('edit-price').value = listing.price || '';
+        document.getElementById('edit-mileage').value = listing.mileage || '';
+        document.getElementById('edit-fuel_type').value = listing.fuel_type || '';
+        document.getElementById('edit-transmission').value = listing.transmission || '';
+        document.getElementById('edit-engine').value = listing.engine || '';
+        document.getElementById('edit-horsepower').value = listing.horsepower || '';
+        document.getElementById('edit-color').value = listing.color || '';
+        document.getElementById('edit-location').value = listing.location || '';
+        document.getElementById('edit-description').value = listing.description || '';
+
+        document.getElementById('edit-header-subtitle').textContent = `Update ${listing.title}`;
+
+        // Fetch existing images
+        const { urls } = await getListingImageUrls(id);
+        const existingImagesContainer = document.getElementById('edit-existing-images');
+        if (urls && urls.length > 0) {
+            existingImagesContainer.innerHTML = urls.map(url => `
+                <div style="width: 100px; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; position: relative;">
+                    <img src="${url}" style="width: 100%; height: 100%; object-fit: cover;" alt="Listing Image" />
+                </div>
+            `).join('');
+        } else {
+            existingImagesContainer.innerHTML = '<span class="text-muted small">No images uploaded yet.</span>';
+        }
+
+        // Show form
+        loadingDiv.style.display = 'none';
+        form.style.display = 'block';
+
+        // Attach listeners
+        form.addEventListener('submit', (e) => handleEditSubmit(e, id));
+        document.getElementById('btn-delete-listing').addEventListener('click', () => handleDeleteListing(id));
+
+        // Image dropzone UX
+        const dropzone = document.getElementById('edit-image-dropzone');
+        const imageInput = document.getElementById('edit-images');
+        const previewContainer = document.getElementById('edit-images-preview');
+        
+        dropzone.addEventListener('mouseover', () => {
+            dropzone.style.borderColor = 'var(--am-primary-200)';
+            dropzone.style.background = 'var(--am-primary-50)';
+        });
+        dropzone.addEventListener('mouseout', () => {
+            dropzone.style.borderColor = '#e2e8f0';
+            dropzone.style.background = 'transparent';
+        });
+
+        imageInput.addEventListener('change', () => {
+            previewContainer.innerHTML = '';
+            Array.from(imageInput.files).forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        previewContainer.innerHTML += `
+                            <div style="width: 100px; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;">
+                                <img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover;" alt="Preview" />
+                            </div>`;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        });
+
+    } catch (err) {
+        console.error(err);
+        loadingDiv.style.display = 'none';
+        showAlert(alertBox, 'danger', 'Failed to load listing details.');
+    }
+}
+
+/**
+ * Handle edit form submission.
+ */
+async function handleEditSubmit(e, id) {
+    e.preventDefault();
+    const form = e.target;
+    
+    if (!form.checkValidity()) {
+        e.stopPropagation();
+        form.classList.add('was-validated');
+        return;
+    }
+
+    const alertBox = document.getElementById('edit-alert');
+    const submitBtn = document.getElementById('submit-edit-btn');
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Saving...';
+    alertBox.innerHTML = '';
+
+    const updates = {
+        title: document.getElementById('edit-title').value.trim(),
+        brand: document.getElementById('edit-brand').value.trim(),
+        model: document.getElementById('edit-model').value.trim(),
+        year: parseInt(document.getElementById('edit-year').value, 10),
+        price: parseFloat(document.getElementById('edit-price').value),
+        mileage: parseInt(document.getElementById('edit-mileage').value, 10) || null,
+        fuel_type: document.getElementById('edit-fuel_type').value || null,
+        transmission: document.getElementById('edit-transmission').value || null,
+        engine: document.getElementById('edit-engine').value.trim() || null,
+        horsepower: parseInt(document.getElementById('edit-horsepower').value, 10) || null,
+        color: document.getElementById('edit-color').value.trim() || null,
+        location: document.getElementById('edit-location').value.trim() || null,
+        description: document.getElementById('edit-description').value.trim() || null,
+        updated_at: new Date().toISOString()
+    };
+
+    try {
+        const { error } = await updateListing(id, updates);
+        if (error) throw error;
+
+        // Upload new images if any
+        const imageInput = document.getElementById('edit-images');
+        if (imageInput.files.length > 0) {
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Uploading images...';
+            await uploadMultipleImages(id, imageInput.files);
+        }
+
+        showAlert(alertBox, 'success', 'Listing updated successfully!');
+        
+        setTimeout(() => {
+            navigateTo('/profile');
+        }, 1500);
+
+    } catch (err) {
+        console.error(err);
+        showAlert(alertBox, 'danger', err.message || 'Failed to update listing.');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="bi bi-check-lg me-2"></i>Save Changes';
+    }
+}
+
+/**
+ * Handle listing deletion.
+ */
+async function handleDeleteListing(id) {
+    if (!confirm('Are you sure you want to delete this listing? This action cannot be undone.')) {
+        return;
+    }
+
+    const btn = document.getElementById('btn-delete-listing');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span>Deleting...';
+
+    try {
+        const { error } = await deleteListing(id);
+        if (error) throw error;
+
+        alert('Listing deleted successfully.');
+        navigateTo('/profile');
+    } catch (err) {
+        console.error(err);
+        alert('Failed to delete listing: ' + (err.message || 'Unknown error'));
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-trash3 me-1"></i>Delete Listing';
+    }
+}
+
+/**
+ * Display a Bootstrap alert.
+ */
+function showAlert(container, type, message) {
+    if (!container) return;
+    const icon = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
+    container.innerHTML = `
+        <div class="alert alert-${type} d-flex align-items-center alert-dismissible fade show mb-4" role="alert">
+            <i class="bi ${icon} me-2"></i>
+            <div>${message}</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>`;
 }

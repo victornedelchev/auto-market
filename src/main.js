@@ -21,8 +21,8 @@ import { renderLoginPage, initLoginPage } from './pages/login/login.js';
 import { renderRegisterPage, initRegisterPage } from './pages/register/register.js';
 import { renderBrowsePage } from './pages/browse/browse.js';
 import { renderDetailsPage } from './pages/details/details.js';
-import { renderCreatePage } from './pages/create/create.js';
-import { renderEditPage } from './pages/edit/edit.js';
+import { renderCreatePage, initCreatePage } from './pages/create/create.js';
+import { renderEditPage, initEditPage } from './pages/edit/edit.js';
 import { renderProfilePage, initProfilePage } from './pages/profile/profile.js';
 import { renderFavoritesPage } from './pages/favorites/favorites.js';
 import { renderAdminPage } from './pages/admin/admin.js';
@@ -67,8 +67,8 @@ addRoute('/login', requireGuest(renderLoginPage), initLoginPage);
 addRoute('/register', requireGuest(renderRegisterPage), initRegisterPage);
 
 // Protected routes (redirect to login if not authenticated)
-addRoute('/create', requireAuth(renderCreatePage));
-addRoute('/edit/:id', requireAuth(renderEditPage));
+addRoute('/create', requireAuth(renderCreatePage), initCreatePage);
+addRoute('/edit/:id', requireAuth(renderEditPage), initEditPage);
 addRoute('/profile', requireAuth(renderProfilePage), initProfilePage);
 addRoute('/favorites', requireAuth(renderFavoritesPage));
 addRoute('/admin', requireAuth(renderAdminPage));
