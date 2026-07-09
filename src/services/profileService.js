@@ -17,7 +17,7 @@ export async function getProfile(userId) {
         .from(TABLE)
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
     return { data, error };
 }
