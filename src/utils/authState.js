@@ -5,12 +5,16 @@
  */
 import { getSession, onAuthStateChange } from '../services/authService.js';
 import { getProfile } from '../services/profileService.js';
+import { checkIsAdmin } from '../services/adminService.js';
 
 /** @type {import('@supabase/supabase-js').User|null} */
 let currentUser = null;
 
 /** @type {Object|null} */
 let currentProfile = null;
+
+/** @type {boolean} */
+let currentUserIsAdmin = false;
 
 /** @type {Array<Function>} */
 const listeners = [];
@@ -28,6 +32,7 @@ export async function initAuth() {
   if (currentUser) {
       const { data: profile } = await getProfile(currentUser.id);
       currentProfile = profile;
+      currentUserIsAdmin = await checkIsAdmin(currentUser.id);
   }
 
   // Subscribe to future auth events (login, logout, token refresh)
@@ -36,8 +41,10 @@ export async function initAuth() {
     if (currentUser) {
         const { data: profile } = await getProfile(currentUser.id);
         currentProfile = profile;
+        currentUserIsAdmin = await checkIsAdmin(currentUser.id);
     } else {
         currentProfile = null;
+        currentUserIsAdmin = false;
     }
     notifyListeners();
   });
@@ -57,6 +64,14 @@ export function getUser() {
  */
 export function isAuthenticated() {
   return currentUser !== null;
+}
+
+/**
+ * Check if the currently authenticated user is an admin.
+ * @returns {boolean}
+ */
+export function isAdminUser() {
+  return currentUserIsAdmin;
 }
 
 /**

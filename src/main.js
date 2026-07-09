@@ -9,7 +9,7 @@ import { addRoute, setNotFound, initRouter } from './utils/router.js';
 
 // Import auth utilities
 import { initAuth, onAuthChange } from './utils/authState.js';
-import { requireAuth, requireGuest } from './utils/guards.js';
+import { requireAuth, requireGuest, requireAdmin } from './utils/guards.js';
 
 // Import layout components
 import { renderNavbar, initNavbar } from './components/navbar/navbar.js';
@@ -25,7 +25,7 @@ import { renderCreatePage, initCreatePage } from './pages/create/create.js';
 import { renderEditPage, initEditPage } from './pages/edit/edit.js';
 import { renderProfilePage, initProfilePage } from './pages/profile/profile.js';
 import { renderFavoritesPage, initFavoritesPage } from './pages/favorites/favorites.js';
-import { renderAdminPage } from './pages/admin/admin.js';
+import { renderAdminPage, initAdminPage } from './pages/admin/admin.js';
 
 /**
  * Render the persistent layout shell (navbar + footer).
@@ -73,7 +73,7 @@ addRoute('/create', requireAuth(renderCreatePage), initCreatePage);
 addRoute('/edit/:id', requireAuth(renderEditPage), initEditPage);
 addRoute('/profile', requireAuth(renderProfilePage), initProfilePage);
 addRoute('/favorites', requireAuth(renderFavoritesPage), initFavoritesPage);
-addRoute('/admin', requireAuth(renderAdminPage));
+addRoute('/admin', requireAdmin(renderAdminPage), initAdminPage);
 
 // 404 fallback
 setNotFound(() => `

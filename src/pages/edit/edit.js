@@ -5,7 +5,7 @@
 import { getListingById, updateListing, deleteListing } from '../../services/listingService.js';
 import { listImages, getPublicUrl, uploadMultipleImages, deleteImage } from '../../services/storageService.js';
 import { navigateTo } from '../../utils/router.js';
-import { getUser } from '../../utils/authState.js';
+import { getUser, isAdminUser } from '../../utils/authState.js';
 import { showConfirmModal } from '../../utils/modalService.js';
 import { validateImageFiles } from '../create/create.js';
 import { showToast } from '../../utils/toastService.js';
@@ -204,7 +204,7 @@ export async function initEditPage(params) {
         }
 
         // Ownership check
-        if (listing.seller_id !== user.id) {
+        if (listing.seller_id !== user.id && !isAdminUser()) {
             showToast('You do not have permission to edit this listing.', 'danger');
             loadingDiv.style.display = 'none';
             return;

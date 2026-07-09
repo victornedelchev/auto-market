@@ -45,3 +45,29 @@ export function requireGuest(handler) {
     return handler(params);
   };
 }
+
+/**
+ * Guard that requires the user to be an admin.
+ */
+export function requireAdmin(handler) {
+  return async (params) => {
+    if (!isAuthenticated()) {
+      navigateTo('/login');
+      return '';
+    }
+    
+    // Check if admin
+    const { getUser } = await import('./authState.js');
+    const { checkIsAdmin } = await import('../services/adminService.js');
+    const user = getUser();
+    
+    if (!user || !(await checkIsAdmin(user.id))) {
+      const { showToast } = await import('./toastService.js');
+      showToast('Access Denied. Admins only.', 'danger');
+      navigateTo('/');
+      return '';
+    }
+    
+    return handler(params);
+  };
+}

@@ -83,18 +83,17 @@ export async function listImages(listingId) {
 /**
  * Get public URLs for all images belonging to a listing.
  * @param {string} listingId
- * @returns {Promise<{ urls: string[], error: Object|null }>}
+ * @returns {Promise<{ urls: string[], files: Object[], error: Object|null }>}
  */
 export async function getListingImageUrls(listingId) {
     const { data, error } = await listImages(listingId);
 
-    if (error) return { urls: [], error };
+    if (error) return { urls: [], files: [], error };
 
-    const urls = data
-        .filter(file => !file.name.startsWith('.'))
-        .map(file => getPublicUrl(`${listingId}/${file.name}`));
+    const validFiles = data.filter(file => !file.name.startsWith('.'));
+    const urls = validFiles.map(file => getPublicUrl(`${listingId}/${file.name}`));
 
-    return { urls, error: null };
+    return { urls, files: validFiles, error: null };
 }
 
 /**

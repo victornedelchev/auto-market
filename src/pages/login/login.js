@@ -118,10 +118,22 @@ async function handleLoginSubmit(e) {
     setLoading(submitBtn, true);
 
     try {
-        const { error } = await login(email, password);
+        const { data, error } = await login(email, password);
 
         if (error) {
             showToast(error.message || 'Login failed. Please try again.', 'danger');
+            setLoading(submitBtn, false);
+            return;
+        }
+
+        // Wait a tiny bit for authState to update, then check if profile is active
+        const { getProfile } = await import('../../services/profileService.js');
+        const { data: profile } = await getProfile(data.session.user.id);
+        
+        if (profile && profile.is_active === false) {
+            const { logout } = await import('../../services/authService.js');
+            await logout();
+            showToast('Your account has been deactivated. Please contact support.', 'danger');
             setLoading(submitBtn, false);
             return;
         }

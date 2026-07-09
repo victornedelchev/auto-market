@@ -3,7 +3,7 @@
  * Premium dark gradient navbar with animated brand and modern navigation.
  * Auth-aware: shows Login/Sign Up for guests, Profile/Logout for authenticated users.
  */
-import { getUser, getUserProfile } from '../../utils/authState.js';
+import { getUser, getUserProfile, isAdminUser } from '../../utils/authState.js';
 import { logout } from '../../services/authService.js';
 import { navigateTo } from '../../utils/router.js';
 
@@ -14,6 +14,7 @@ import { navigateTo } from '../../utils/router.js';
 export function renderNavbar() {
     const currentHash = window.location.hash || '#/';
     const user = getUser();
+    const isAdmin = isAdminUser();
 
     const links = [
         { href: '#/', label: 'Home', icon: 'bi-house-door' },
@@ -21,6 +22,10 @@ export function renderNavbar() {
         { href: '#/create', label: 'Sell a Car', icon: 'bi-plus-circle', auth: true },
         { href: '#/favorites', label: 'Favorites', icon: 'bi-heart', auth: true },
     ];
+    
+    if (isAdmin) {
+        links.push({ href: '#/admin', label: 'Admin Dashboard', icon: 'bi-shield-lock', auth: true });
+    }
 
     // Filter links based on auth state
     const visibleLinks = links.filter((link) => {
