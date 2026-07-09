@@ -36,15 +36,11 @@ export function renderSearchFilters() {
                     <div class="row g-3">
                         <div class="col-md-3">
                             <label for="filter-make" class="form-label">Make</label>
-                            <select class="form-select" id="filter-make">
-                                <option value="">All Makes</option>
-                            </select>
+                            <input type="text" class="form-control" id="filter-make" placeholder="e.g. BMW" />
                         </div>
                         <div class="col-md-3">
                             <label for="filter-model" class="form-label">Model</label>
-                            <select class="form-select" id="filter-model">
-                                <option value="">All Models</option>
-                            </select>
+                            <input type="text" class="form-control" id="filter-model" placeholder="e.g. X5" />
                         </div>
                         <div class="col-md-3">
                             <label for="filter-year-min" class="form-label">Year From</label>

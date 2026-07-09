@@ -16,6 +16,10 @@ const TABLE = 'car_listings';
  * @param {boolean} [options.ascending=false] - Sort direction.
  * @param {Object} [options.filters] - Key-value pairs for exact-match filters.
  * @param {string} [options.search] - Free-text search keyword (matches title).
+ * @param {number} [options.minPrice]
+ * @param {number} [options.maxPrice]
+ * @param {number} [options.minYear]
+ * @param {number} [options.maxYear]
  * @returns {Promise<{ data: Array|null, count: number|null, error: Object|null }>}
  */
 export async function getListings({
@@ -25,6 +29,10 @@ export async function getListings({
     ascending = false,
     filters = {},
     search = '',
+    minPrice,
+    maxPrice,
+    minYear,
+    maxYear
 } = {}) {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
@@ -35,16 +43,34 @@ export async function getListings({
         .order(sortBy, { ascending })
         .range(from, to);
 
-    // Apply exact-match filters
+    // Apply exact-match filters (e.g. fuel_type, transmission)
     for (const [key, value] of Object.entries(filters)) {
         if (value !== undefined && value !== null && value !== '') {
-            query = query.eq(key, value);
+            if (key === 'brand' || key === 'model') {
+                query = query.ilike(key, `%${value}%`);
+            } else {
+                query = query.eq(key, value);
+            }
         }
+    }
+
+    // Apply range filters
+    if (minPrice !== undefined && minPrice !== null && minPrice !== '') {
+        query = query.gte('price', minPrice);
+    }
+    if (maxPrice !== undefined && maxPrice !== null && maxPrice !== '') {
+        query = query.lte('price', maxPrice);
+    }
+    if (minYear !== undefined && minYear !== null && minYear !== '') {
+        query = query.gte('year', minYear);
+    }
+    if (maxYear !== undefined && maxYear !== null && maxYear !== '') {
+        query = query.lte('year', maxYear);
     }
 
     // Apply keyword search
     if (search) {
-        query = query.ilike('title', `%${search}%`);
+        query = query.or(`title.ilike.%${search}%,brand.ilike.%${search}%,model.ilike.%${search}%`);
     }
 
     const { data, count, error } = await query;

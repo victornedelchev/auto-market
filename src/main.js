@@ -19,7 +19,7 @@ import { renderFooter } from './components/footer/footer.js';
 import { renderHomePage } from './pages/home/home.js';
 import { renderLoginPage, initLoginPage } from './pages/login/login.js';
 import { renderRegisterPage, initRegisterPage } from './pages/register/register.js';
-import { renderBrowsePage } from './pages/browse/browse.js';
+import { renderBrowsePage, initBrowsePage } from './pages/browse/browse.js';
 import { renderDetailsPage, initDetailsPage } from './pages/details/details.js';
 import { renderCreatePage, initCreatePage } from './pages/create/create.js';
 import { renderEditPage, initEditPage } from './pages/edit/edit.js';
@@ -59,7 +59,7 @@ function updateNavbar() {
 
 // Public routes (accessible to everyone)
 addRoute('/', renderHomePage);
-addRoute('/browse', renderBrowsePage);
+addRoute('/browse', renderBrowsePage, initBrowsePage);
 addRoute('/details/:id', renderDetailsPage, initDetailsPage);
 
 // Guest-only routes (redirect to home if already logged in)
