@@ -25,6 +25,16 @@ export function renderRegisterPage() {
                 <div id="register-alert"></div>
                 <form id="register-form" novalidate>
                     <div class="row g-3">
+                        <div class="col-12">
+                            <label for="register-username" class="form-label">Username *</label>
+                            <div class="input-group">
+                                <span class="input-group-text" style="background: var(--am-light); border-right: none; border-radius: var(--am-radius-sm) 0 0 var(--am-radius-sm); color: var(--am-gray);">
+                                    <i class="bi bi-at"></i>
+                                </span>
+                                <input type="text" class="form-control" id="register-username" placeholder="johndoe123" required
+                                       style="border-left: none; border-radius: 0 var(--am-radius-sm) var(--am-radius-sm) 0;" />
+                            </div>
+                        </div>
                         <div class="col-6">
                             <label for="register-first-name" class="form-label">First Name</label>
                             <input type="text" class="form-control" id="register-first-name" placeholder="John" required />
@@ -129,6 +139,7 @@ async function handleRegisterSubmit(e) {
 
     const alertBox = document.getElementById('register-alert');
     const submitBtn = document.getElementById('register-submit-btn');
+    const usernameInput = document.getElementById('register-username');
     const firstNameInput = document.getElementById('register-first-name');
     const lastNameInput = document.getElementById('register-last-name');
     const emailInput = document.getElementById('register-email');
@@ -141,6 +152,7 @@ async function handleRegisterSubmit(e) {
     alertBox.innerHTML = '';
 
     // Gather values
+    const username = usernameInput ? usernameInput.value.trim() : '';
     const firstName = firstNameInput.value.trim();
     const lastName = lastNameInput.value.trim();
     const email = emailInput.value.trim();
@@ -149,6 +161,12 @@ async function handleRegisterSubmit(e) {
     const confirmPassword = confirmPasswordInput.value;
 
     // Client-side validation
+    if (!username) {
+        showAlert(alertBox, 'danger', 'Please enter a username.');
+        if (usernameInput) usernameInput.focus();
+        return;
+    }
+
     if (!firstName || !lastName) {
         showAlert(alertBox, 'danger', 'Please enter your first and last name.');
         firstNameInput.focus();
@@ -189,6 +207,7 @@ async function handleRegisterSubmit(e) {
 
     try {
         const { error } = await register(email, password, {
+            username: username,
             first_name: firstName,
             last_name: lastName,
             phone: phone,
