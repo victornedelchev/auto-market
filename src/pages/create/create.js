@@ -6,6 +6,7 @@ import { createListing } from '../../services/listingService.js';
 import { uploadMultipleImages } from '../../services/storageService.js';
 import { navigateTo } from '../../utils/router.js';
 import { getUser } from '../../utils/authState.js';
+import { showToast } from '../../utils/toastService.js';
 
 /**
  * Render the create listing page.
@@ -30,7 +31,6 @@ export function renderCreatePage() {
 
     <div class="container" style="margin-top: -1.5rem; position: relative; z-index: 2; margin-bottom: 2rem;">
         <div class="card-am-static">
-            <div id="create-alert" class="m-4 mb-0"></div>
             <form id="create-listing-form" class="needs-validation" novalidate>
                 <!-- Section 1: Vehicle Info -->
                 <div class="p-4" style="border-bottom: 1px solid #e2e8f0;">
@@ -187,13 +187,9 @@ export function initCreatePage() {
             
             const validationError = validateImageFiles(files, 0);
             if (validationError) {
-                const alertBox = document.getElementById('create-alert');
-                if (alertBox) showAlert(alertBox, 'danger', validationError);
+                showToast(validationError, 'danger');
                 imageInput.value = ''; // clear input
                 return;
-            } else {
-                const alertBox = document.getElementById('create-alert');
-                if (alertBox) alertBox.innerHTML = ''; // Clear previous error
             }
 
             files.forEach((file, index) => {
@@ -252,19 +248,17 @@ async function handleCreateSubmit(e) {
         return;
     }
 
-    const alertBox = document.getElementById('create-alert');
     const submitBtn = document.getElementById('submit-create-btn');
     const user = getUser();
 
     if (!user) {
-        showAlert(alertBox, 'danger', 'You must be logged in to create a listing.');
+        showToast('You must be logged in to create a listing.', 'danger');
         return;
     }
 
     // Set loading state
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Publishing...';
-    alertBox.innerHTML = '';
 
     // Gather data
     const imageInput = document.getElementById('create-images');
@@ -273,7 +267,7 @@ async function handleCreateSubmit(e) {
     // Validate images before creating the listing record
     const validationError = validateImageFiles(files, 0);
     if (validationError) {
-        showAlert(alertBox, 'danger', validationError);
+        showToast(validationError, 'danger');
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="bi bi-rocket-takeoff me-2"></i>Publish Listing';
         return;
@@ -305,16 +299,16 @@ async function handleCreateSubmit(e) {
             throw createError;
         }
 
-        // 2. Upload images if any
         if (files.length > 0) {
             submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Uploading images...';
             const { failed } = await uploadMultipleImages(newListing.id, files);
             if (failed.length > 0) {
                 console.warn('Some images failed to upload:', failed);
+                showToast('Some images failed to upload.', 'warning');
             }
         }
 
-        showAlert(alertBox, 'success', 'Listing published successfully! Redirecting...');
+        showToast('Listing published successfully!', 'success');
         
         setTimeout(() => {
             navigateTo('/profile');
@@ -322,22 +316,8 @@ async function handleCreateSubmit(e) {
 
     } catch (err) {
         console.error(err);
-        showAlert(alertBox, 'danger', err.message || 'Failed to create listing. Please try again.');
+        showToast(err.message || 'Failed to create listing. Please try again.', 'danger');
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="bi bi-rocket-takeoff me-2"></i>Publish Listing';
     }
-}
-
-/**
- * Display a Bootstrap alert.
- */
-function showAlert(container, type, message) {
-    if (!container) return;
-    const icon = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
-    container.innerHTML = `
-        <div class="alert alert-${type} d-flex align-items-center alert-dismissible fade show mb-4" role="alert">
-            <i class="bi ${icon} me-2"></i>
-            <div>${message}</div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>`;
 }

@@ -7,6 +7,7 @@ import { listImages, getPublicUrl, uploadMultipleImages, deleteImage } from '../
 import { navigateTo } from '../../utils/router.js';
 import { getUser } from '../../utils/authState.js';
 import { validateImageFiles } from '../create/create.js';
+import { showToast } from '../../utils/toastService.js';
 
 let currentImageCount = 0;
 
@@ -37,7 +38,6 @@ export function renderEditPage(params = {}) {
 
     <div class="container" style="margin-top: -1.5rem; position: relative; z-index: 2; margin-bottom: 2rem;">
         <div class="card-am-static">
-            <div id="edit-alert" class="m-4 mb-0"></div>
             
             <div id="edit-loading" class="p-5 text-center">
                 <div class="spinner-border text-primary" role="status"></div>
@@ -186,7 +186,6 @@ export async function initEditPage(params) {
     const form = document.getElementById('edit-listing-form');
     if (!form) return;
 
-    const alertBox = document.getElementById('edit-alert');
     const loadingDiv = document.getElementById('edit-loading');
     const user = getUser();
 
@@ -205,7 +204,7 @@ export async function initEditPage(params) {
 
         // Ownership check
         if (listing.seller_id !== user.id) {
-            showAlert(alertBox, 'danger', 'You do not have permission to edit this listing.');
+            showToast('You do not have permission to edit this listing.', 'danger');
             loadingDiv.style.display = 'none';
             return;
         }
@@ -258,11 +257,9 @@ export async function initEditPage(params) {
             
             const validationError = validateImageFiles(files, currentImageCount);
             if (validationError) {
-                showAlert(alertBox, 'danger', validationError);
+                showToast(validationError, 'danger');
                 imageInput.value = ''; // clear input
                 return;
-            } else {
-                alertBox.innerHTML = '';
             }
 
             files.forEach(file => {
@@ -280,7 +277,7 @@ export async function initEditPage(params) {
     } catch (err) {
         console.error(err);
         loadingDiv.style.display = 'none';
-        showAlert(alertBox, 'danger', 'Failed to load listing details.');
+        showToast('Failed to load listing details.', 'danger');
     }
 }
 
@@ -297,19 +294,17 @@ async function handleEditSubmit(e, id) {
         return;
     }
 
-    const alertBox = document.getElementById('edit-alert');
     const submitBtn = document.getElementById('submit-edit-btn');
 
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Saving...';
-    alertBox.innerHTML = '';
 
     const imageInput = document.getElementById('edit-images');
     const files = Array.from(imageInput.files);
     
     const validationError = validateImageFiles(files, currentImageCount);
     if (validationError) {
-        showAlert(alertBox, 'danger', validationError);
+        showToast(validationError, 'danger');
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="bi bi-check-lg me-2"></i>Save Changes';
         return;
@@ -342,7 +337,7 @@ async function handleEditSubmit(e, id) {
             await uploadMultipleImages(id, files);
         }
 
-        showAlert(alertBox, 'success', 'Listing updated successfully!');
+        showToast('Listing updated successfully!', 'success');
         
         setTimeout(() => {
             navigateTo('/profile');
@@ -350,7 +345,7 @@ async function handleEditSubmit(e, id) {
 
     } catch (err) {
         console.error(err);
-        showAlert(alertBox, 'danger', err.message || 'Failed to update listing.');
+        showToast(err.message || 'Failed to update listing.', 'danger');
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="bi bi-check-lg me-2"></i>Save Changes';
     }
@@ -394,7 +389,7 @@ window.handleDeleteImage = async (filePath, listingId) => {
     
     const { error } = await deleteImage(filePath);
     if (error) {
-        alert('Failed to delete image: ' + error.message);
+        showToast('Failed to delete image: ' + error.message, 'danger');
         return;
     }
     
@@ -418,26 +413,12 @@ async function handleDeleteListing(id) {
         const { error } = await deleteListing(id);
         if (error) throw error;
 
-        alert('Listing deleted successfully.');
+        showToast('Listing deleted successfully.', 'success');
         navigateTo('/profile');
     } catch (err) {
         console.error(err);
-        alert('Failed to delete listing: ' + (err.message || 'Unknown error'));
+        showToast('Failed to delete listing: ' + (err.message || 'Unknown error'), 'danger');
         btn.disabled = false;
         btn.innerHTML = '<i class="bi bi-trash3 me-1"></i>Delete Listing';
     }
-}
-
-/**
- * Display a Bootstrap alert.
- */
-function showAlert(container, type, message) {
-    if (!container) return;
-    const icon = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
-    container.innerHTML = `
-        <div class="alert alert-${type} d-flex align-items-center alert-dismissible fade show mb-4" role="alert">
-            <i class="bi ${icon} me-2"></i>
-            <div>${message}</div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>`;
 }

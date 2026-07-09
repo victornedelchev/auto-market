@@ -38,6 +38,8 @@ function renderLayout() {
         <div id="navbar-container">${renderNavbar()}</div>
         <div id="router-outlet" class="flex-grow-1"></div>
         <div id="footer-container">${renderFooter()}</div>
+        <!-- Global Toast Container -->
+        <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1090"></div>
     `;
 
     // Attach navbar event listeners (logout button)

@@ -5,6 +5,7 @@
  */
 import { register } from '../../services/authService.js';
 import { navigateTo } from '../../utils/router.js';
+import { showToast } from '../../utils/toastService.js';
 
 /**
  * Render the register page.
@@ -22,7 +23,6 @@ export function renderRegisterPage() {
                 <p>Join the AutoMarket community today</p>
             </div>
             <div class="auth-body">
-                <div id="register-alert"></div>
                 <form id="register-form" novalidate>
                     <div class="row g-3">
                         <div class="col-12">
@@ -137,7 +137,6 @@ export function initRegisterPage() {
 async function handleRegisterSubmit(e) {
     e.preventDefault();
 
-    const alertBox = document.getElementById('register-alert');
     const submitBtn = document.getElementById('register-submit-btn');
     const usernameInput = document.getElementById('register-username');
     const firstNameInput = document.getElementById('register-first-name');
@@ -147,9 +146,6 @@ async function handleRegisterSubmit(e) {
     const passwordInput = document.getElementById('register-password');
     const confirmPasswordInput = document.getElementById('register-confirm-password');
     const termsCheckbox = document.getElementById('register-terms');
-
-    // Clear previous alerts
-    alertBox.innerHTML = '';
 
     // Gather values
     const username = usernameInput ? usernameInput.value.trim() : '';
@@ -162,43 +158,43 @@ async function handleRegisterSubmit(e) {
 
     // Client-side validation
     if (!username) {
-        showAlert(alertBox, 'danger', 'Please enter a username.');
+        showToast('Please enter a username.', 'danger');
         if (usernameInput) usernameInput.focus();
         return;
     }
 
     if (!firstName || !lastName) {
-        showAlert(alertBox, 'danger', 'Please enter your first and last name.');
+        showToast('Please enter your first and last name.', 'danger');
         firstNameInput.focus();
         return;
     }
 
     if (!email) {
-        showAlert(alertBox, 'danger', 'Please enter your email address.');
+        showToast('Please enter your email address.', 'danger');
         emailInput.focus();
         return;
     }
 
     if (!isValidEmail(email)) {
-        showAlert(alertBox, 'danger', 'Please enter a valid email address.');
+        showToast('Please enter a valid email address.', 'danger');
         emailInput.focus();
         return;
     }
 
     if (password.length < 6) {
-        showAlert(alertBox, 'danger', 'Password must be at least 6 characters.');
+        showToast('Password must be at least 6 characters.', 'danger');
         passwordInput.focus();
         return;
     }
 
     if (password !== confirmPassword) {
-        showAlert(alertBox, 'warning', 'Passwords do not match. Please try again.');
+        showToast('Passwords do not match. Please try again.', 'warning');
         confirmPasswordInput.focus();
         return;
     }
 
     if (!termsCheckbox.checked) {
-        showAlert(alertBox, 'warning', 'You must agree to the Terms of Service and Privacy Policy.');
+        showToast('You must agree to the Terms of Service and Privacy Policy.', 'warning');
         return;
     }
 
@@ -214,20 +210,19 @@ async function handleRegisterSubmit(e) {
         });
 
         if (error) {
-            showAlert(alertBox, 'danger', error.message || 'Registration failed. Please try again.');
+            showToast(error.message || 'Registration failed. Please try again.', 'danger');
             setLoading(submitBtn, false);
             return;
         }
 
-        showAlert(alertBox, 'success',
-            'Account created successfully! Redirecting to login...');
+        showToast('Account created successfully! Redirecting to login...', 'success');
 
         // Redirect to login after a short delay
         setTimeout(() => {
             navigateTo('/login');
         }, 2500);
     } catch (err) {
-        showAlert(alertBox, 'danger', 'An unexpected error occurred. Please try again.');
+        showToast('An unexpected error occurred. Please try again.', 'danger');
         setLoading(submitBtn, false);
     }
 }
@@ -261,25 +256,6 @@ function calculateStrength(password) {
     return score;
 }
 
-/**
- * Display a Bootstrap alert in the given container.
- * @param {HTMLElement} container
- * @param {'success'|'danger'|'warning'|'info'} type
- * @param {string} message
- */
-function showAlert(container, type, message) {
-    const icon = type === 'success' ? 'bi-check-circle-fill'
-        : type === 'danger' ? 'bi-exclamation-triangle-fill'
-        : type === 'warning' ? 'bi-exclamation-circle-fill'
-        : 'bi-info-circle-fill';
-
-    container.innerHTML = `
-        <div class="alert alert-${type} d-flex align-items-center alert-dismissible fade show" role="alert">
-            <i class="bi ${icon} me-2"></i>
-            <div>${message}</div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>`;
-}
 
 /**
  * Toggle loading state on a button.

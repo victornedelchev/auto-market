@@ -5,6 +5,7 @@
  */
 import { login } from '../../services/authService.js';
 import { navigateTo } from '../../utils/router.js';
+import { showToast } from '../../utils/toastService.js';
 
 /**
  * Render the login page.
@@ -22,7 +23,6 @@ export function renderLoginPage() {
                 <p>Sign in to your AutoMarket account</p>
             </div>
             <div class="auth-body">
-                <div id="login-alert"></div>
                 <form id="login-form" novalidate>
                     <div class="mb-3">
                         <label for="login-email" class="form-label">Email address</label>
@@ -88,32 +88,28 @@ export function initLoginPage() {
 async function handleLoginSubmit(e) {
     e.preventDefault();
 
-    const alertBox = document.getElementById('login-alert');
     const submitBtn = document.getElementById('login-submit-btn');
     const emailInput = document.getElementById('login-email');
     const passwordInput = document.getElementById('login-password');
-
-    // Clear previous alerts
-    alertBox.innerHTML = '';
 
     // Client-side validation
     const email = emailInput.value.trim();
     const password = passwordInput.value;
 
     if (!email) {
-        showAlert(alertBox, 'danger', 'Please enter your email address.');
+        showToast('Please enter your email address.', 'danger');
         emailInput.focus();
         return;
     }
 
     if (!isValidEmail(email)) {
-        showAlert(alertBox, 'danger', 'Please enter a valid email address.');
+        showToast('Please enter a valid email address.', 'danger');
         emailInput.focus();
         return;
     }
 
     if (password.length < 6) {
-        showAlert(alertBox, 'danger', 'Password must be at least 6 characters.');
+        showToast('Password must be at least 6 characters.', 'danger');
         passwordInput.focus();
         return;
     }
@@ -125,42 +121,22 @@ async function handleLoginSubmit(e) {
         const { error } = await login(email, password);
 
         if (error) {
-            showAlert(alertBox, 'danger', error.message || 'Login failed. Please try again.');
+            showToast(error.message || 'Login failed. Please try again.', 'danger');
             setLoading(submitBtn, false);
             return;
         }
 
-        showAlert(alertBox, 'success', 'Login successful! Redirecting...');
-
-        // Short delay so the user sees the success message
+        // Login is obvious, so we just redirect without a toast
         setTimeout(() => {
             navigateTo('/');
-        }, 800);
+        }, 300);
     } catch (err) {
-        showAlert(alertBox, 'danger', 'An unexpected error occurred. Please try again.');
+        showToast('An unexpected error occurred. Please try again.', 'danger');
         setLoading(submitBtn, false);
     }
 }
 
-/**
- * Display a Bootstrap alert in the given container.
- * @param {HTMLElement} container
- * @param {'success'|'danger'|'warning'|'info'} type
- * @param {string} message
- */
-function showAlert(container, type, message) {
-    const icon = type === 'success' ? 'bi-check-circle-fill'
-        : type === 'danger' ? 'bi-exclamation-triangle-fill'
-        : type === 'warning' ? 'bi-exclamation-circle-fill'
-        : 'bi-info-circle-fill';
 
-    container.innerHTML = `
-        <div class="alert alert-${type} d-flex align-items-center alert-dismissible fade show" role="alert">
-            <i class="bi ${icon} me-2"></i>
-            <div>${message}</div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>`;
-}
 
 /**
  * Toggle loading state on a button.

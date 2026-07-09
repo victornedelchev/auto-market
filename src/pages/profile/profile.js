@@ -8,6 +8,7 @@ import { getProfile, updateProfile, uploadAvatar, removeAvatar, getUserStats } f
 import { getListingsByUser } from '../../services/listingService.js';
 import { getListingImageUrls } from '../../services/storageService.js';
 import { renderListingCard } from '../../components/listingCard/listingCard.js';
+import { showToast } from '../../utils/toastService.js';
 
 /**
  * Render the profile page (loading state initially).
@@ -45,8 +46,9 @@ export async function initProfilePage() {
 
     if (!profile || profileResult.error) {
         console.error('Failed to load profile:', profileResult.error);
+        showToast('Failed to load profile.', 'danger');
         container.innerHTML = `
-            <div class="alert alert-danger m-5">Failed to load profile.</div>
+            <div class="text-center mt-5 text-muted">Failed to load profile data.</div>
         `;
         return;
     }
@@ -164,8 +166,6 @@ function buildProfileView(user, profile, stats, listings, listingImages = {}) {
                                 <p style="color: var(--am-gray); font-size: 0.85rem; margin: 0;">Update your personal information</p>
                             </div>
                         </div>
-
-                        <div id="profile-alert"></div>
 
                         <form id="profile-edit-form" novalidate>
                             <!-- Avatar Section -->
@@ -401,11 +401,8 @@ function handleAvatarFileSelected() {
 async function handleSaveProfile(e, user, profile, stats) {
     e.preventDefault();
 
-    const alertBox = document.getElementById('profile-alert');
     const saveBtn = document.getElementById('save-profile-btn');
     const avatarInput = document.getElementById('avatar-file-input');
-
-    alertBox.innerHTML = '';
 
     const fullName = document.getElementById('edit-full-name').value.trim();
     const phone = document.getElementById('edit-phone').value.trim();
@@ -420,7 +417,7 @@ async function handleSaveProfile(e, user, profile, stats) {
         if (avatarInput.files && avatarInput.files[0]) {
             const { error: avatarError } = await uploadAvatar(user.id, avatarInput.files[0]);
             if (avatarError) {
-                showProfileAlert(alertBox, 'danger', `Avatar upload failed: ${avatarError.message}`);
+                showToast(`Avatar upload failed: ${avatarError.message}`, 'danger');
                 resetSaveButton(saveBtn);
                 return;
             }
@@ -434,7 +431,7 @@ async function handleSaveProfile(e, user, profile, stats) {
         });
 
         if (error) {
-            showProfileAlert(alertBox, 'danger', error.message || 'Failed to update profile.');
+            showToast(error.message || 'Failed to update profile.', 'danger');
             resetSaveButton(saveBtn);
             return;
         }
@@ -464,14 +461,10 @@ async function handleSaveProfile(e, user, profile, stats) {
         container.innerHTML = buildProfileView(user, updatedProfile || profile, stats, updatedListings, updatedListingImages);
         attachViewListeners(user, updatedProfile || profile, stats);
 
-        // Show success alert in the new view
-        const newAlertBox = document.getElementById('profile-alert');
-        if (newAlertBox) {
-            toggleEditSection(true);
-            showProfileAlert(newAlertBox, 'success', 'Profile updated successfully!');
-        }
+        toggleEditSection(true);
+        showToast('Profile updated successfully!', 'success');
     } catch (err) {
-        showProfileAlert(alertBox, 'danger', 'An unexpected error occurred.');
+        showToast('An unexpected error occurred.', 'danger');
         resetSaveButton(saveBtn);
     }
 }
@@ -490,8 +483,7 @@ async function handleRemoveAvatar(user, profile, stats) {
         const { error } = await removeAvatar(user.id);
 
         if (error) {
-            const alertBox = document.getElementById('profile-alert');
-            showProfileAlert(alertBox, 'danger', `Failed to remove avatar: ${error.message}`);
+            showToast(`Failed to remove avatar: ${error.message}`, 'danger');
             if (removeBtn) {
                 removeBtn.disabled = false;
                 removeBtn.innerHTML = '<i class="bi bi-trash me-1"></i>Remove';
@@ -525,10 +517,7 @@ async function handleRemoveAvatar(user, profile, stats) {
         attachViewListeners(user, updatedProfile || profile, stats);
 
         toggleEditSection(true);
-        const newAlertBox = document.getElementById('profile-alert');
-        if (newAlertBox) {
-            showProfileAlert(newAlertBox, 'success', 'Avatar removed successfully!');
-        }
+        showToast('Avatar removed successfully!', 'success');
     } catch (err) {
         if (removeBtn) {
             removeBtn.disabled = false;
@@ -537,22 +526,6 @@ async function handleRemoveAvatar(user, profile, stats) {
     }
 }
 
-/**
- * Show an alert in the profile edit section.
- */
-function showProfileAlert(container, type, message) {
-    if (!container) return;
-    const icon = type === 'success' ? 'bi-check-circle-fill'
-        : type === 'danger' ? 'bi-exclamation-triangle-fill'
-        : 'bi-info-circle-fill';
-
-    container.innerHTML = `
-        <div class="alert alert-${type} d-flex align-items-center alert-dismissible fade show" role="alert">
-            <i class="bi ${icon} me-2"></i>
-            <div>${message}</div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>`;
-}
 
 /**
  * Reset the save button to its default state.
