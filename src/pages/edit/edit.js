@@ -6,6 +6,7 @@ import { getListingById, updateListing, deleteListing } from '../../services/lis
 import { listImages, getPublicUrl, uploadMultipleImages, deleteImage } from '../../services/storageService.js';
 import { navigateTo } from '../../utils/router.js';
 import { getUser } from '../../utils/authState.js';
+import { showConfirmModal } from '../../utils/modalService.js';
 import { validateImageFiles } from '../create/create.js';
 import { showToast } from '../../utils/toastService.js';
 
@@ -384,26 +385,41 @@ async function renderExistingImages(listingId) {
 /**
  * Handle deleting a single image. Exposed globally for inline onclick.
  */
-window.handleDeleteImage = async (filePath, listingId) => {
-    if (!confirm('Delete this image permanently?')) return;
-    
-    const { error } = await deleteImage(filePath);
-    if (error) {
-        showToast('Failed to delete image: ' + error.message, 'danger');
-        return;
+window.handleDeleteImage = async function handleRemoveExistingImage(filePath, listingId) {
+    const confirmed = await showConfirmModal(
+        'Delete Image',
+        'Delete this image permanently?',
+        'Delete',
+        'danger'
+    );
+    if (!confirmed) return;
+
+    try {
+        const { error } = await deleteImage(filePath);
+        if (error) {
+            showToast('Failed to delete image: ' + error.message, 'danger');
+            return;
+        }
+        
+        // Refresh images
+        await renderExistingImages(listingId);
+    } catch (err) {
+        console.error(err);
+        showToast('Error deleting image', 'danger');
     }
-    
-    // Refresh images
-    await renderExistingImages(listingId);
 };
 
 /**
  * Handle listing deletion.
  */
 async function handleDeleteListing(id) {
-    if (!confirm('Are you sure you want to delete this listing? This action cannot be undone.')) {
-        return;
-    }
+    const confirmed = await showConfirmModal(
+        'Delete Listing',
+        'Are you sure you want to delete this listing? This action cannot be undone.',
+        'Delete',
+        'danger'
+    );
+    if (!confirmed) return;
 
     const btn = document.getElementById('btn-delete-listing');
     btn.disabled = true;

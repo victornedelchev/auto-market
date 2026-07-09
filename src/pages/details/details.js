@@ -9,6 +9,7 @@ import { getListingImageUrls, deleteAllListingImages } from '../../services/stor
 import { getUser } from '../../utils/authState.js';
 import { showToast } from '../../utils/toastService.js';
 import { navigateTo } from '../../utils/router.js';
+import { showConfirmModal } from '../../utils/modalService.js';
 
 export function renderDetailsPage(params = {}) {
     return `
@@ -268,7 +269,14 @@ export async function initDetailsPage(params = {}) {
             });
 
             document.getElementById('btn-delete')?.addEventListener('click', async () => {
-                if (confirm('Are you sure you want to delete this listing? This action cannot be undone.')) {
+                const confirmed = await showConfirmModal(
+                    'Delete Listing',
+                    'Are you sure you want to delete this listing? This action cannot be undone.',
+                    'Delete',
+                    'primary'
+                );
+                
+                if (confirmed) {
                     try {
                         // Delete images first
                         await deleteAllListingImages(id);
