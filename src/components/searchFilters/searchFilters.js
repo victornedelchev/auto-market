@@ -8,6 +8,8 @@
  * @returns {string} The search filters markup.
  */
 export function renderSearchFilters() {
+    const currentYear = new Date().getFullYear();
+    
     return `
     <div class="card-am-static mb-4" style="overflow: visible;">
         <div class="p-4">
@@ -19,7 +21,7 @@ export function renderSearchFilters() {
                            placeholder="Search by make, model, or keyword..."
                            style="padding-left: 2.8rem; height: 48px; font-size: 1rem;" />
                 </div>
-                <button type="button" class="btn btn-am-primary" style="height: 48px; padding: 0 1.5rem; white-space: nowrap;">
+                <button type="button" id="main-search-btn" class="btn btn-am-primary" style="height: 48px; padding: 0 1.5rem; white-space: nowrap;">
                     <i class="bi bi-search me-1"></i>Search
                 </button>
             </div>
@@ -44,19 +46,19 @@ export function renderSearchFilters() {
                         </div>
                         <div class="col-md-3">
                             <label for="filter-year-min" class="form-label">Year From</label>
-                            <input type="number" class="form-control" id="filter-year-min" placeholder="2010" />
+                            <input type="number" class="form-control" id="filter-year-min" placeholder="1885" min="1885" max="${currentYear}" />
                         </div>
                         <div class="col-md-3">
                             <label for="filter-year-max" class="form-label">Year To</label>
-                            <input type="number" class="form-control" id="filter-year-max" placeholder="2025" />
+                            <input type="number" class="form-control" id="filter-year-max" placeholder="${currentYear}" min="1885" max="${currentYear}" />
                         </div>
                         <div class="col-md-3">
                             <label for="filter-price-min" class="form-label">Price Min (&euro;)</label>
-                            <input type="number" class="form-control" id="filter-price-min" placeholder="0" />
+                            <input type="number" class="form-control" id="filter-price-min" placeholder="0" min="0" />
                         </div>
                         <div class="col-md-3">
                             <label for="filter-price-max" class="form-label">Price Max (&euro;)</label>
-                            <input type="number" class="form-control" id="filter-price-max" placeholder="100,000" />
+                            <input type="number" class="form-control" id="filter-price-max" placeholder="100,000" min="0" />
                         </div>
                         <div class="col-md-3">
                             <label for="filter-fuel" class="form-label">Fuel Type</label>

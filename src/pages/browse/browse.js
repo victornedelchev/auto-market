@@ -66,6 +66,11 @@ export function renderBrowsePage() {
 export function initBrowsePage() {
     currentPage = 1;
     const form = document.getElementById('search-filters-form');
+    const handleSearchClick = () => {
+        currentPage = 1;
+        fetchAndRenderListings();
+    };
+
     if (form) {
         form.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -79,6 +84,12 @@ export function initBrowsePage() {
                 fetchAndRenderListings();
             }, 0);
         });
+
+        // Trigger search when the main Search button is clicked
+        const searchBtn = document.getElementById('main-search-btn');
+        if (searchBtn) {
+            searchBtn.addEventListener('click', handleSearchClick);
+        }
     }
 
     // Attach delegated event listener for pagination
