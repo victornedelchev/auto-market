@@ -121,6 +121,8 @@ export function initRegisterPage() {
     const form = document.getElementById('register-form');
     if (!form) return;
 
+    form.reset();
+
     form.addEventListener('submit', handleRegisterSubmit);
 
     // Live password strength indicator
@@ -216,6 +218,16 @@ async function handleRegisterSubmit(e) {
         }
 
         showToast('Account created successfully! Redirecting to login...', 'success');
+        if (usernameInput) usernameInput.value = '';
+        firstNameInput.value = '';
+        lastNameInput.value = '';
+        emailInput.value = '';
+        if (phoneInput) phoneInput.value = '';
+        passwordInput.value = '';
+        confirmPasswordInput.value = '';
+        termsCheckbox.checked = false;
+        document.getElementById('register-form').reset();
+        updatePasswordStrength();
 
         // Redirect to login after a short delay
         setTimeout(() => {

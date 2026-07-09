@@ -78,6 +78,8 @@ export function initLoginPage() {
     const form = document.getElementById('login-form');
     if (!form) return;
 
+    form.reset();
+
     form.addEventListener('submit', handleLoginSubmit);
 }
 
@@ -139,6 +141,11 @@ async function handleLoginSubmit(e) {
         }
 
         // Login is obvious, so we just redirect without a toast
+        emailInput.value = '';
+        passwordInput.value = '';
+        const rememberCheckbox = document.getElementById('login-remember');
+        if (rememberCheckbox) rememberCheckbox.checked = false;
+        document.getElementById('login-form').reset();
         setTimeout(() => {
             navigateTo('/');
         }, 300);

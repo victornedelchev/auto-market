@@ -73,17 +73,18 @@ export function renderEditPage(params = {}) {
                         </div>
                         <div class="col-md-3">
                             <label for="edit-year" class="form-label">Year *</label>
-                            <input type="number" class="form-control" id="edit-year" min="1900" max="${new Date().getFullYear() + 1}" required />
+                            <input type="number" class="form-control" id="edit-year" min="1885" max="${new Date().getFullYear()}" required />
                             <div class="invalid-feedback">Enter a valid year.</div>
                         </div>
                         <div class="col-md-3">
                             <label for="edit-price" class="form-label">Price (&euro;) *</label>
-                            <input type="number" class="form-control" id="edit-price" min="1" required />
-                            <div class="invalid-feedback">Enter a valid price.</div>
+                            <input type="number" class="form-control" id="edit-price" min="0.01" step="0.01" required />
+                            <div class="invalid-feedback">Enter a valid positive price.</div>
                         </div>
                         <div class="col-md-3">
                             <label for="edit-mileage" class="form-label">Mileage (km)</label>
-                            <input type="number" class="form-control" id="edit-mileage" min="0" />
+                            <input type="number" class="form-control" id="edit-mileage" min="0.01" step="0.01" />
+                            <div class="invalid-feedback">Enter a valid positive mileage.</div>
                         </div>
                         <div class="col-md-3">
                             <label for="edit-fuel_type" class="form-label">Fuel Type</label>
@@ -110,7 +111,8 @@ export function renderEditPage(params = {}) {
                         </div>
                         <div class="col-md-3">
                             <label for="edit-horsepower" class="form-label">Horsepower (HP)</label>
-                            <input type="number" class="form-control" id="edit-horsepower" min="1" />
+                            <input type="number" class="form-control" id="edit-horsepower" min="0.01" step="0.01" />
+                            <div class="invalid-feedback">Enter a valid positive horsepower.</div>
                         </div>
                         <div class="col-md-3">
                             <label for="edit-color" class="form-label">Color</label>
@@ -306,6 +308,39 @@ async function handleEditSubmit(e, id) {
     const validationError = validateImageFiles(files, currentImageCount);
     if (validationError) {
         showToast(validationError, 'danger');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="bi bi-check-lg me-2"></i>Save Changes';
+        return;
+    }
+
+    const yearVal = parseInt(document.getElementById('edit-year').value, 10);
+    const currentYear = new Date().getFullYear();
+    if (yearVal < 1885 || yearVal > currentYear) {
+        showToast(`Year must be between 1885 and ${currentYear}.`, 'danger');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="bi bi-check-lg me-2"></i>Save Changes';
+        return;
+    }
+
+    const priceVal = parseFloat(document.getElementById('edit-price').value);
+    if (priceVal <= 0) {
+        showToast('Price must be a positive number.', 'danger');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="bi bi-check-lg me-2"></i>Save Changes';
+        return;
+    }
+
+    const mileageStr = document.getElementById('edit-mileage').value;
+    if (mileageStr && parseFloat(mileageStr) <= 0) {
+        showToast('Mileage must be a positive number.', 'danger');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="bi bi-check-lg me-2"></i>Save Changes';
+        return;
+    }
+
+    const hpStr = document.getElementById('edit-horsepower').value;
+    if (hpStr && parseFloat(hpStr) <= 0) {
+        showToast('Horsepower must be a positive number.', 'danger');
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="bi bi-check-lg me-2"></i>Save Changes';
         return;
