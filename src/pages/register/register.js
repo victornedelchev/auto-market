@@ -1,7 +1,10 @@
 /**
  * Register page.
  * Premium registration card with gradient header.
+ * Integrates with Supabase Auth for email/password sign-up.
  */
+import { register } from '../../services/authService.js';
+import { navigateTo } from '../../utils/router.js';
 
 /**
  * Render the register page.
@@ -19,7 +22,8 @@ export function renderRegisterPage() {
                 <p>Join the AutoMarket community today</p>
             </div>
             <div class="auth-body">
-                <form id="register-form">
+                <div id="register-alert"></div>
+                <form id="register-form" novalidate>
                     <div class="row g-3">
                         <div class="col-6">
                             <label for="register-first-name" class="form-label">First Name</label>
@@ -41,15 +45,25 @@ export function renderRegisterPage() {
                         </div>
                     </div>
                     <div class="mb-3">
+                        <label for="register-phone" class="form-label">Phone Number (optional)</label>
+                        <div class="input-group">
+                            <span class="input-group-text" style="background: var(--am-light); border-right: none; border-radius: var(--am-radius-sm) 0 0 var(--am-radius-sm); color: var(--am-gray);">
+                                <i class="bi bi-telephone"></i>
+                            </span>
+                            <input type="tel" class="form-control" id="register-phone" placeholder="+1 234 567 890"
+                                   style="border-left: none; border-radius: 0 var(--am-radius-sm) var(--am-radius-sm) 0;" />
+                        </div>
+                    </div>
+                    <div class="mb-3">
                         <label for="register-password" class="form-label">Password</label>
                         <div class="input-group">
                             <span class="input-group-text" style="background: var(--am-light); border-right: none; border-radius: var(--am-radius-sm) 0 0 var(--am-radius-sm); color: var(--am-gray);">
                                 <i class="bi bi-lock"></i>
                             </span>
-                            <input type="password" class="form-control" id="register-password" placeholder="Min 6 characters" required
+                            <input type="password" class="form-control" id="register-password" placeholder="Min 6 characters" required minlength="6"
                                    style="border-left: none; border-radius: 0 var(--am-radius-sm) var(--am-radius-sm) 0;" />
                         </div>
-                        <div class="d-flex gap-1 mt-2">
+                        <div class="d-flex gap-1 mt-2" id="password-strength-bars">
                             <div style="flex: 1; height: 3px; border-radius: 2px; background: #e2e8f0;"></div>
                             <div style="flex: 1; height: 3px; border-radius: 2px; background: #e2e8f0;"></div>
                             <div style="flex: 1; height: 3px; border-radius: 2px; background: #e2e8f0;"></div>
@@ -63,7 +77,7 @@ export function renderRegisterPage() {
                             <span class="input-group-text" style="background: var(--am-light); border-right: none; border-radius: var(--am-radius-sm) 0 0 var(--am-radius-sm); color: var(--am-gray);">
                                 <i class="bi bi-lock-fill"></i>
                             </span>
-                            <input type="password" class="form-control" id="register-confirm-password" placeholder="Repeat password" required
+                            <input type="password" class="form-control" id="register-confirm-password" placeholder="Repeat password" required minlength="6"
                                    style="border-left: none; border-radius: 0 var(--am-radius-sm) var(--am-radius-sm) 0;" />
                         </div>
                     </div>
@@ -75,7 +89,7 @@ export function renderRegisterPage() {
                         </label>
                     </div>
                     <div class="d-grid mb-3">
-                        <button type="submit" class="btn btn-am-primary py-2" style="font-size: 1rem;">
+                        <button type="submit" class="btn btn-am-primary py-2" id="register-submit-btn" style="font-size: 1rem;">
                             <i class="bi bi-person-plus me-2"></i>Create Account
                         </button>
                     </div>
@@ -87,4 +101,188 @@ export function renderRegisterPage() {
             </div>
         </div>
     </div>`;
+}
+
+/**
+ * Initialize register page event listeners.
+ * Must be called after renderRegisterPage HTML is in the DOM.
+ */
+export function initRegisterPage() {
+    const form = document.getElementById('register-form');
+    if (!form) return;
+
+    form.addEventListener('submit', handleRegisterSubmit);
+
+    // Live password strength indicator
+    const passwordInput = document.getElementById('register-password');
+    if (passwordInput) {
+        passwordInput.addEventListener('input', updatePasswordStrength);
+    }
+}
+
+/**
+ * Handle register form submission.
+ * @param {SubmitEvent} e
+ */
+async function handleRegisterSubmit(e) {
+    e.preventDefault();
+
+    const alertBox = document.getElementById('register-alert');
+    const submitBtn = document.getElementById('register-submit-btn');
+    const firstNameInput = document.getElementById('register-first-name');
+    const lastNameInput = document.getElementById('register-last-name');
+    const emailInput = document.getElementById('register-email');
+    const phoneInput = document.getElementById('register-phone');
+    const passwordInput = document.getElementById('register-password');
+    const confirmPasswordInput = document.getElementById('register-confirm-password');
+    const termsCheckbox = document.getElementById('register-terms');
+
+    // Clear previous alerts
+    alertBox.innerHTML = '';
+
+    // Gather values
+    const firstName = firstNameInput.value.trim();
+    const lastName = lastNameInput.value.trim();
+    const email = emailInput.value.trim();
+    const phone = phoneInput ? phoneInput.value.trim() : '';
+    const password = passwordInput.value;
+    const confirmPassword = confirmPasswordInput.value;
+
+    // Client-side validation
+    if (!firstName || !lastName) {
+        showAlert(alertBox, 'danger', 'Please enter your first and last name.');
+        firstNameInput.focus();
+        return;
+    }
+
+    if (!email) {
+        showAlert(alertBox, 'danger', 'Please enter your email address.');
+        emailInput.focus();
+        return;
+    }
+
+    if (!isValidEmail(email)) {
+        showAlert(alertBox, 'danger', 'Please enter a valid email address.');
+        emailInput.focus();
+        return;
+    }
+
+    if (password.length < 6) {
+        showAlert(alertBox, 'danger', 'Password must be at least 6 characters.');
+        passwordInput.focus();
+        return;
+    }
+
+    if (password !== confirmPassword) {
+        showAlert(alertBox, 'warning', 'Passwords do not match. Please try again.');
+        confirmPasswordInput.focus();
+        return;
+    }
+
+    if (!termsCheckbox.checked) {
+        showAlert(alertBox, 'warning', 'You must agree to the Terms of Service and Privacy Policy.');
+        return;
+    }
+
+    // Disable button and show spinner
+    setLoading(submitBtn, true);
+
+    try {
+        const { error } = await register(email, password, {
+            first_name: firstName,
+            last_name: lastName,
+            phone: phone,
+        });
+
+        if (error) {
+            showAlert(alertBox, 'danger', error.message || 'Registration failed. Please try again.');
+            setLoading(submitBtn, false);
+            return;
+        }
+
+        showAlert(alertBox, 'success',
+            'Account created successfully! Redirecting to login...');
+
+        // Redirect to login after a short delay
+        setTimeout(() => {
+            navigateTo('/login');
+        }, 2500);
+    } catch (err) {
+        showAlert(alertBox, 'danger', 'An unexpected error occurred. Please try again.');
+        setLoading(submitBtn, false);
+    }
+}
+
+/**
+ * Update the password strength indicator bars.
+ */
+function updatePasswordStrength() {
+    const password = document.getElementById('register-password').value;
+    const bars = document.querySelectorAll('#password-strength-bars > div');
+
+    const strength = calculateStrength(password);
+    const colors = ['#ef4444', '#f59e0b', '#22c55e', '#16a34a'];
+
+    bars.forEach((bar, i) => {
+        bar.style.background = i < strength ? colors[Math.min(strength - 1, 3)] : '#e2e8f0';
+    });
+}
+
+/**
+ * Calculate password strength (0–4).
+ * @param {string} password
+ * @returns {number}
+ */
+function calculateStrength(password) {
+    let score = 0;
+    if (password.length >= 6) score++;
+    if (password.length >= 10) score++;
+    if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score++;
+    if (/\d/.test(password) || /[^A-Za-z0-9]/.test(password)) score++;
+    return score;
+}
+
+/**
+ * Display a Bootstrap alert in the given container.
+ * @param {HTMLElement} container
+ * @param {'success'|'danger'|'warning'|'info'} type
+ * @param {string} message
+ */
+function showAlert(container, type, message) {
+    const icon = type === 'success' ? 'bi-check-circle-fill'
+        : type === 'danger' ? 'bi-exclamation-triangle-fill'
+        : type === 'warning' ? 'bi-exclamation-circle-fill'
+        : 'bi-info-circle-fill';
+
+    container.innerHTML = `
+        <div class="alert alert-${type} d-flex align-items-center alert-dismissible fade show" role="alert">
+            <i class="bi ${icon} me-2"></i>
+            <div>${message}</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>`;
+}
+
+/**
+ * Toggle loading state on a button.
+ * @param {HTMLElement} btn
+ * @param {boolean} loading
+ */
+function setLoading(btn, loading) {
+    if (loading) {
+        btn.disabled = true;
+        btn.dataset.originalHtml = btn.innerHTML;
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Creating account...`;
+    } else {
+        btn.disabled = false;
+        btn.innerHTML = btn.dataset.originalHtml || '<i class="bi bi-person-plus me-2"></i>Create Account';
+    }
+}
+
+/**
+ * Validate an email address format.
+ * @param {string} email
+ * @returns {boolean}
+ */
+function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }

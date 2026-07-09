@@ -7,14 +7,18 @@ import './styles/main.css';
 // Import router
 import { addRoute, setNotFound, initRouter } from './utils/router.js';
 
+// Import auth utilities
+import { initAuth, onAuthChange } from './utils/authState.js';
+import { requireAuth, requireGuest } from './utils/guards.js';
+
 // Import layout components
-import { renderNavbar } from './components/navbar/navbar.js';
+import { renderNavbar, initNavbar } from './components/navbar/navbar.js';
 import { renderFooter } from './components/footer/footer.js';
 
 // Import pages
 import { renderHomePage } from './pages/home/home.js';
-import { renderLoginPage } from './pages/login/login.js';
-import { renderRegisterPage } from './pages/register/register.js';
+import { renderLoginPage, initLoginPage } from './pages/login/login.js';
+import { renderRegisterPage, initRegisterPage } from './pages/register/register.js';
 import { renderBrowsePage } from './pages/browse/browse.js';
 import { renderDetailsPage } from './pages/details/details.js';
 import { renderCreatePage } from './pages/create/create.js';
@@ -35,29 +39,39 @@ function renderLayout() {
         <div id="router-outlet" class="flex-grow-1"></div>
         <div id="footer-container">${renderFooter()}</div>
     `;
+
+    // Attach navbar event listeners (logout button)
+    initNavbar();
 }
 
 /**
- * Re-render the navbar to reflect the currently active route.
+ * Re-render the navbar to reflect auth state and active route.
  */
 function updateNavbar() {
     const container = document.getElementById('navbar-container');
     if (container) {
         container.innerHTML = renderNavbar();
+        initNavbar();
     }
 }
 
-// Register all routes
+// ── Route Registration ──────────────────────────────────────────────────
+
+// Public routes (accessible to everyone)
 addRoute('/', renderHomePage);
-addRoute('/login', renderLoginPage);
-addRoute('/register', renderRegisterPage);
 addRoute('/browse', renderBrowsePage);
 addRoute('/details/:id', renderDetailsPage);
-addRoute('/create', renderCreatePage);
-addRoute('/edit/:id', renderEditPage);
-addRoute('/profile', renderProfilePage);
-addRoute('/favorites', renderFavoritesPage);
-addRoute('/admin', renderAdminPage);
+
+// Guest-only routes (redirect to home if already logged in)
+addRoute('/login', requireGuest(renderLoginPage), initLoginPage);
+addRoute('/register', requireGuest(renderRegisterPage), initRegisterPage);
+
+// Protected routes (redirect to login if not authenticated)
+addRoute('/create', requireAuth(renderCreatePage));
+addRoute('/edit/:id', requireAuth(renderEditPage));
+addRoute('/profile', requireAuth(renderProfilePage));
+addRoute('/favorites', requireAuth(renderFavoritesPage));
+addRoute('/admin', requireAuth(renderAdminPage));
 
 // 404 fallback
 setNotFound(() => `
@@ -68,11 +82,22 @@ setNotFound(() => `
     </div>
 `);
 
+// ── Auth State Listener ─────────────────────────────────────────────────
+
+// Re-render navbar whenever auth state changes (login / logout / token refresh)
+onAuthChange(() => {
+    updateNavbar();
+});
+
 // Update navbar active state on every navigation
 window.addEventListener('hashchange', updateNavbar);
 
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
+// ── Initialize ──────────────────────────────────────────────────────────
+
+document.addEventListener('DOMContentLoaded', async () => {
+    // Restore session before rendering anything
+    await initAuth();
+
     renderLayout();
     initRouter();
 });

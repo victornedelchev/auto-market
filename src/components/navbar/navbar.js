@@ -1,7 +1,11 @@
 /**
  * Navbar component.
  * Premium dark gradient navbar with animated brand and modern navigation.
+ * Auth-aware: shows Login/Sign Up for guests, Profile/Logout for authenticated users.
  */
+import { getUser } from '../../utils/authState.js';
+import { logout } from '../../services/authService.js';
+import { navigateTo } from '../../utils/router.js';
 
 /**
  * Render the navbar HTML.
@@ -9,13 +13,20 @@
  */
 export function renderNavbar() {
     const currentHash = window.location.hash || '#/';
+    const user = getUser();
 
     const links = [
         { href: '#/', label: 'Home', icon: 'bi-house-door' },
         { href: '#/browse', label: 'Browse', icon: 'bi-grid-3x3-gap' },
-        { href: '#/create', label: 'Sell a Car', icon: 'bi-plus-circle' },
-        { href: '#/favorites', label: 'Favorites', icon: 'bi-heart' },
+        { href: '#/create', label: 'Sell a Car', icon: 'bi-plus-circle', auth: true },
+        { href: '#/favorites', label: 'Favorites', icon: 'bi-heart', auth: true },
     ];
+
+    // Filter links based on auth state
+    const visibleLinks = links.filter((link) => {
+        if (link.auth && !user) return false;
+        return true;
+    });
 
     const buildLink = ({ href, label, icon }) => {
         const isActive = currentHash === href ? 'active' : '';
@@ -26,6 +37,8 @@ export function renderNavbar() {
             </a>
         </li>`;
     };
+
+    const authSection = user ? renderUserMenu(user) : renderGuestButtons();
 
     return `
     <nav class="navbar navbar-expand-lg sticky-top" style="background: var(--am-gradient-dark); border-bottom: 1px solid rgba(255,255,255,0.06);">
@@ -61,19 +74,9 @@ export function renderNavbar() {
 
             <div class="collapse navbar-collapse" id="mainNavbar">
                 <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-1">
-                    ${links.map(buildLink).join('')}
+                    ${visibleLinks.map(buildLink).join('')}
                 </ul>
-                <div class="d-flex align-items-center gap-2">
-                    <a href="#/login" class="btn btn-sm px-3 py-2"
-                       style="color: rgba(255,255,255,0.8); font-weight: 500; transition: var(--am-transition-fast);"
-                       onmouseover="this.style.color='#fff'"
-                       onmouseout="this.style.color='rgba(255,255,255,0.8)'">
-                        Login
-                    </a>
-                    <a href="#/register" class="btn btn-sm btn-am-primary px-3 py-2" style="font-size: 0.875rem;">
-                        <i class="bi bi-person-plus me-1"></i>Sign Up
-                    </a>
-                </div>
+                ${authSection}
             </div>
         </div>
     </nav>
@@ -96,4 +99,82 @@ export function renderNavbar() {
             background: rgba(37, 99, 235, 0.25);
         }
     </style>`;
+}
+
+/**
+ * Render the guest buttons (Login + Sign Up).
+ * @returns {string}
+ */
+function renderGuestButtons() {
+    return `
+    <div class="d-flex align-items-center gap-2">
+        <a href="#/login" class="btn btn-sm px-3 py-2"
+           style="color: rgba(255,255,255,0.8); font-weight: 500; transition: var(--am-transition-fast);">
+            Login
+        </a>
+        <a href="#/register" class="btn btn-sm btn-am-primary px-3 py-2" style="font-size: 0.875rem;">
+            <i class="bi bi-person-plus me-1"></i>Sign Up
+        </a>
+    </div>`;
+}
+
+/**
+ * Render the authenticated user menu (Profile + Logout).
+ * @param {Object} user - The Supabase user object.
+ * @returns {string}
+ */
+function renderUserMenu(user) {
+    const displayName = user.user_metadata?.first_name
+        || user.email?.split('@')[0]
+        || 'User';
+
+    return `
+    <div class="d-flex align-items-center gap-2">
+        <a href="#/profile" class="btn btn-sm px-3 py-2 d-flex align-items-center gap-2"
+           style="color: rgba(255,255,255,0.8); font-weight: 500; transition: var(--am-transition-fast);">
+            <span style="
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 28px;
+                height: 28px;
+                border-radius: 50%;
+                background: var(--am-gradient-primary);
+                font-size: 0.75rem;
+                color: #fff;
+                font-weight: 600;
+            ">${displayName.charAt(0).toUpperCase()}</span>
+            ${displayName}
+        </a>
+        <button type="button" class="btn btn-sm px-3 py-2" id="logout-btn"
+                style="color: rgba(255,255,255,0.7); font-weight: 500; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; transition: var(--am-transition-fast);">
+            <i class="bi bi-box-arrow-right me-1"></i>Logout
+        </button>
+    </div>`;
+}
+
+/**
+ * Initialize navbar event listeners.
+ * Must be called after renderNavbar HTML is in the DOM.
+ */
+export function initNavbar() {
+    const logoutBtn = document.getElementById('logout-btn');
+    if (!logoutBtn) return;
+
+    logoutBtn.addEventListener('click', handleLogout);
+}
+
+/**
+ * Handle logout button click.
+ */
+async function handleLogout() {
+    const logoutBtn = document.getElementById('logout-btn');
+
+    if (logoutBtn) {
+        logoutBtn.disabled = true;
+        logoutBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Logging out...`;
+    }
+
+    await logout();
+    navigateTo('/');
 }

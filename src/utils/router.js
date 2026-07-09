@@ -1,6 +1,6 @@
 /**
  * Simple hash-based client-side router.
- * Routes are registered as { path, handler } objects.
+ * Routes are registered as { path, handler, afterRender } objects.
  * The handler receives any route parameters extracted from the URL.
  */
 
@@ -12,9 +12,10 @@ let notFoundHandler = null;
  * Supports dynamic segments like `/details/:id`.
  * @param {string} path - The route path pattern.
  * @param {Function} handler - Async function that returns HTML or renders into the outlet.
+ * @param {Function} [afterRender] - Optional callback invoked after the HTML is in the DOM.
  */
-export function addRoute(path, handler) {
-    routes.push({ path, handler });
+export function addRoute(path, handler, afterRender = null) {
+    routes.push({ path, handler, afterRender });
 }
 
 /**
@@ -35,7 +36,7 @@ export function navigateTo(path) {
 
 /**
  * Match a registered route pattern against the current hash path.
- * Returns `{ handler, params }` or `null`.
+ * Returns `{ handler, params, afterRender }` or `null`.
  */
 function matchRoute(hash) {
     const currentPath = hash.replace('#', '') || '/';
@@ -55,7 +56,7 @@ function matchRoute(hash) {
             paramNames.forEach((name, index) => {
                 params[name] = match[index + 1];
             });
-            return { handler: route.handler, params };
+            return { handler: route.handler, params, afterRender: route.afterRender };
         }
     }
 
@@ -76,6 +77,10 @@ async function resolveRoute() {
         const content = await result.handler(result.params);
         if (typeof content === 'string') {
             outlet.innerHTML = content;
+        }
+        // Call the post-render callback if provided
+        if (typeof result.afterRender === 'function') {
+            result.afterRender(result.params);
         }
     } else if (notFoundHandler) {
         const content = await notFoundHandler();
