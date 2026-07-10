@@ -3,6 +3,9 @@
  * Modern dark footer with gradient accent line, brand, links and social icons.
  */
 
+import { showToast } from '../../utils/toastService.js';
+import { Modal } from 'bootstrap';
+
 /**
  * Render the footer HTML.
  * @returns {string} The footer markup.
@@ -76,9 +79,9 @@ export function renderFooter() {
                         Subscribe to get the latest listings and deals.
                     </p>
                     <div class="input-group" style="max-width: 340px;">
-                        <input type="email" class="form-control" placeholder="your@email.com"
+                        <input type="email" id="footer-newsletter-email" class="form-control" placeholder="your@email.com"
                                style="border-radius: 8px 0 0 8px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.06); color: #fff;">
-                        <button class="btn btn-am-primary" style="border-radius: 0 8px 8px 0; padding: 0 1.2rem;">
+                        <button id="footer-newsletter-btn" class="btn btn-am-primary" style="border-radius: 0 8px 8px 0; padding: 0 1.2rem;">
                             <i class="bi bi-send"></i>
                         </button>
                     </div>
@@ -94,6 +97,29 @@ export function renderFooter() {
                 <div class="d-flex gap-3">
                     <a href="#" style="color: rgba(255,255,255,0.35); font-size: 0.82rem; text-decoration: none;">Privacy Policy</a>
                     <a href="#" style="color: rgba(255,255,255,0.35); font-size: 0.82rem; text-decoration: none;">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Subscription Modal -->
+        <div class="modal fade" id="newsletter-modal" tabindex="-1" aria-labelledby="newsletterModalLabel" aria-hidden="true" data-bs-theme="light">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content" style="border: none; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.3);">
+                    <div style="background: var(--am-gradient-primary); padding: 2rem 1.5rem; text-align: center; position: relative;">
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="position: absolute; top: 15px; right: 15px;"></button>
+                        <div style="width: 70px; height: 70px; background: rgba(255,255,255,0.2); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1rem; border: 2px solid rgba(255,255,255,0.4);">
+                            <i class="bi bi-envelope-check" style="font-size: 2.5rem; color: #fff;"></i>
+                        </div>
+                        <h4 class="modal-title text-white fw-bold mb-0" id="newsletterModalLabel" style="font-family: var(--am-font-display);">Subscription Successful!</h4>
+                    </div>
+                    <div class="modal-body text-center p-4" style="background: #fff; color: var(--am-dark);">
+                        <p class="text-muted mb-2" style="font-size: 1.1rem;">You're now on the list.</p>
+                        <p style="font-size: 1.05rem; margin-bottom: 1rem;">We've sent a confirmation to <br><strong id="subscribed-email-display" style="color: var(--am-primary); font-size: 1.15rem;"></strong></p>
+                        <p class="text-muted small mt-3 mb-0">Get ready for the best car deals straight to your inbox.</p>
+                    </div>
+                    <div class="modal-footer border-0 pb-4 justify-content-center" style="background: #fff;">
+                        <button type="button" class="btn btn-am-primary px-4 py-2" data-bs-dismiss="modal" style="border-radius: var(--am-radius-sm);">Awesome, thanks!</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -136,4 +162,46 @@ export function renderFooter() {
             transform: translateY(-2px);
         }
     </style>`;
+}
+
+/**
+ * Initialize footer event listeners.
+ */
+export function initFooter() {
+    const btn = document.getElementById('footer-newsletter-btn');
+    const input = document.getElementById('footer-newsletter-email');
+    
+    if (btn && input) {
+        btn.addEventListener('click', () => {
+            const email = input.value.trim();
+            if (!email) {
+                showToast('Please enter an email address to subscribe.', 'warning');
+                return;
+            }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                showToast('Please enter a valid email address.', 'danger');
+                return;
+            }
+            
+            const emailDisplay = document.getElementById('subscribed-email-display');
+            if (emailDisplay) emailDisplay.textContent = email;
+            
+            const modalEl = document.getElementById('newsletter-modal');
+            if (modalEl) {
+                const modal = Modal.getOrCreateInstance(modalEl);
+                modal.show();
+            } else {
+                showToast('Subscribed to newsletter with ' + email, 'success');
+            }
+            
+            input.value = '';
+        });
+        
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                btn.click();
+            }
+        });
+    }
 }

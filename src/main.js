@@ -13,7 +13,7 @@ import { requireAuth, requireGuest, requireAdmin } from './utils/guards.js';
 
 // Import layout components
 import { renderNavbar, initNavbar } from './components/navbar/navbar.js';
-import { renderFooter } from './components/footer/footer.js';
+import { renderFooter, initFooter } from './components/footer/footer.js';
 
 // Import pages
 import { renderHomePage, initHomePage } from './pages/home/home.js';
@@ -44,6 +44,9 @@ function renderLayout() {
 
     // Attach navbar event listeners (logout button)
     initNavbar();
+    
+    // Attach footer event listeners (newsletter form)
+    initFooter();
 }
 
 /**
