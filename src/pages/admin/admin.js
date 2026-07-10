@@ -63,6 +63,8 @@ export function renderAdminPage() {
             z-index: 2;
             margin: 0 auto 2rem;
             display: inline-flex;
+            flex-wrap: wrap;
+            justify-content: center;
             gap: 0.5rem;
         }
         .admin-tab {
@@ -131,10 +133,11 @@ export function renderAdminPage() {
             background: white;
             border-radius: 1rem;
             box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 0 0 1px rgba(0,0,0,0.02);
-            overflow: hidden;
         }
         .admin-table-container .table-responsive {
-            overflow: visible;
+            border-radius: 1rem;
+            padding-bottom: 5rem; /* Add padding to prevent dropdown clipping */
+            margin-bottom: -5rem;
         }
         .admin-table th {
             background: #f8fafc;
