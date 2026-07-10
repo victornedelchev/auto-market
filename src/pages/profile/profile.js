@@ -73,7 +73,19 @@ function buildProfileView(user, profile, stats) {
     });
 
     const avatarHtml = profile.avatar_url
-        ? `<img src="${profile.avatar_url}" alt="Avatar" style="width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 4px solid rgba(255,255,255,0.15); box-shadow: 0 8px 24px rgba(37,99,235,0.3);" />`
+        ? `<div style="position: relative; display: inline-block;">
+             <img src="${profile.avatar_url}" alt="Avatar" style="width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 4px solid rgba(255,255,255,0.15); box-shadow: 0 8px 24px rgba(37,99,235,0.3);" />
+             <button id="download-avatar-btn" data-url="${profile.avatar_url}"
+                style="position: absolute; bottom: -5px; right: -5px; width: 30px; height: 30px; 
+                       background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); color: #fff; 
+                       border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+                       border: 2px solid rgba(255,255,255,0.5); transition: background 0.2s; cursor: pointer;"
+                onmouseover="this.style.background='var(--am-primary)'"
+                onmouseout="this.style.background='rgba(0,0,0,0.65)'"
+                title="Download Avatar">
+                 <i class="bi bi-download" style="font-size: 0.85rem;"></i>
+             </button>
+           </div>`
         : `<div style="width: 90px; height: 90px; border-radius: 50%; background: var(--am-gradient-primary); display: flex; align-items: center; justify-content: center; color: #fff; font-family: var(--am-font-display); font-weight: 800; font-size: 2rem; border: 4px solid rgba(255,255,255,0.15); box-shadow: 0 8px 24px rgba(37,99,235,0.3);">${initials}</div>`;
 
     return `
@@ -314,6 +326,40 @@ function attachViewListeners(user, profile, stats) {
     const removeAvatarBtn = document.getElementById('remove-avatar-btn');
     if (removeAvatarBtn) {
         removeAvatarBtn.addEventListener('click', () => handleRemoveAvatar(user, profile, stats));
+    }
+
+    // Download avatar button
+    const downloadAvatarBtn = document.getElementById('download-avatar-btn');
+    if (downloadAvatarBtn) {
+        downloadAvatarBtn.addEventListener('click', async (e) => {
+            const url = e.currentTarget.getAttribute('data-url');
+            try {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                if (window.showSaveFilePicker) {
+                    const handle = await window.showSaveFilePicker({
+                        suggestedName: 'avatar.jpg',
+                        types: [{ description: 'Image', accept: { 'image/jpeg': ['.jpg', '.jpeg'], 'image/png': ['.png'] } }]
+                    });
+                    const writable = await handle.createWritable();
+                    await writable.write(blob);
+                    await writable.close();
+                } else {
+                    const blobUrl = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = blobUrl;
+                    a.download = 'avatar.jpg';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(blobUrl);
+                }
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    window.open(url, '_blank');
+                }
+            }
+        });
     }
 }
 

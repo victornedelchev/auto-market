@@ -3,6 +3,8 @@
  * Handles admin-specific operations like fetching users, deactivating users, and getting stats.
  */
 import { supabase } from './supabase.js';
+import { removeAvatar } from './profileService.js';
+import { deleteAllListingImages } from './storageService.js';
 
 /**
  * Fetch all users (profiles) and their roles.
@@ -72,12 +74,46 @@ export async function setRole(userId, role) {
 }
 
 /**
- * Hard delete a user completely from the database.
+ * Hard delete a user completely from the database and storage.
  * @param {string} userId
  */
 export async function deleteUser(userId) {
-    const { data, error } = await supabase.rpc('admin_delete_user', { target_user_id: userId });
-    return { data, error };
+    try {
+        // 1. Fetch all listings owned by the user
+        const { data: listings } = await supabase
+            .from('car_listings')
+            .select('id')
+            .eq('seller_id', userId);
+
+        // 2. Delete all listing images from storage
+        if (listings && listings.length > 0) {
+            for (const listing of listings) {
+                await deleteAllListingImages(listing.id);
+            }
+        }
+
+        // 3. Delete user's avatar from storage
+        await removeAvatar(userId);
+
+        // 4. Delete the listings from the DB
+        await supabase
+            .from('car_listings')
+            .delete()
+            .eq('seller_id', userId);
+
+        // 5. Delete the profile from the DB
+        await supabase
+            .from('profiles')
+            .delete()
+            .eq('id', userId);
+
+        // 6. Call the RPC to delete the auth user
+        const { data, error } = await supabase.rpc('admin_delete_user', { target_user_id: userId });
+        
+        return { data, error };
+    } catch (err) {
+        return { data: null, error: err };
+    }
 }
 
 /**

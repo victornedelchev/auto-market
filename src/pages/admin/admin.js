@@ -416,13 +416,14 @@ async function loadStats() {
     `;
 }
 
-async function loadUsers() {
+async function loadUsers(page = 1) {
+    currentUsersPage = page;
     const tbody = document.getElementById('admin-users-tbody');
     if (!tbody) return;
 
     tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4"><div class="spinner-border text-primary"></div></td></tr>';
 
-    const { data, error } = await getAllUsers();
+    const { data, count, error } = await getAllUsers({ page, limit: USERS_PER_PAGE });
     if (error || !data) {
         tbody.innerHTML = '<tr><td colspan="5" class="text-danger text-center">Failed to load users</td></tr>';
         return;
