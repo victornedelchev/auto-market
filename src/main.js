@@ -16,7 +16,7 @@ import { renderNavbar, initNavbar } from './components/navbar/navbar.js';
 import { renderFooter } from './components/footer/footer.js';
 
 // Import pages
-import { renderHomePage } from './pages/home/home.js';
+import { renderHomePage, initHomePage } from './pages/home/home.js';
 import { renderLoginPage, initLoginPage } from './pages/login/login.js';
 import { renderRegisterPage, initRegisterPage } from './pages/register/register.js';
 import { renderBrowsePage, initBrowsePage } from './pages/browse/browse.js';
@@ -60,7 +60,7 @@ function updateNavbar() {
 // ── Route Registration ──────────────────────────────────────────────────
 
 // Public routes (accessible to everyone)
-addRoute('/', renderHomePage);
+addRoute('/', renderHomePage, initHomePage);
 addRoute('/browse', renderBrowsePage, initBrowsePage);
 addRoute('/details/:id', renderDetailsPage, initDetailsPage);
 

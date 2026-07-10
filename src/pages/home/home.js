@@ -9,11 +9,7 @@ import { renderListingCard } from '../../components/listingCard/listingCard.js';
  * @returns {string} The page markup.
  */
 export function renderHomePage() {
-    const placeholderListings = [
-        { id: '1', title: 'BMW X5 M Sport', price: 45000, year: 2022, fuel: 'Diesel', mileage: 32000 },
-        { id: '2', title: 'Mercedes-Benz C220d', price: 38500, year: 2021, fuel: 'Diesel', mileage: 41000 },
-        { id: '3', title: 'Audi A4 Avant 40 TFSI', price: 34900, year: 2023, fuel: 'Petrol', mileage: 15000 },
-    ];
+
 
     return `
     <!-- ── Hero Section ── -->
@@ -115,8 +111,10 @@ export function renderHomePage() {
                     View All <i class="bi bi-arrow-right ms-1"></i>
                 </a>
             </div>
-            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-                ${placeholderListings.map(l => renderListingCard(l)).join('')}
+            <div id="home-featured-listings" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                <div class="col-12 text-center py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
             </div>
         </div>
     </section>
@@ -167,4 +165,48 @@ export function renderHomePage() {
             </div>
         </div>
     </section>`;
+}
+
+/**
+ * Initialize the home page (fetch random featured listings).
+ */
+export async function initHomePage() {
+    const container = document.getElementById('home-featured-listings');
+    if (!container) return;
+
+    try {
+        const { getListings } = await import('../../services/listingService.js');
+        const { getListingImageUrls } = await import('../../services/storageService.js');
+
+        // Fetch up to 50 latest listings to pick randomly from
+        const { data: listings, error } = await getListings({ limit: 50 });
+        if (error) throw error;
+
+        if (!listings || listings.length === 0) {
+            container.innerHTML = '<div class="col-12 text-center text-muted py-5">No listings available.</div>';
+            return;
+        }
+
+        // Shuffle and pick 3
+        const shuffled = [...listings].sort(() => 0.5 - Math.random());
+        const selectedListings = shuffled.slice(0, 3);
+
+        const listingsWithImages = await Promise.all(selectedListings.map(async (listing) => {
+            const { urls } = await getListingImageUrls(listing.id);
+            listing.coverUrl = (urls && urls.length > 0) 
+                ? urls[0] 
+                : 'https://dummyimage.com/600x400/e2e8f0/64748b&text=No+Image';
+            return listing;
+        }));
+
+        container.innerHTML = listingsWithImages.map(l => renderListingCard({
+            ...l,
+            image: l.coverUrl,
+            fuel: l.fuel_type
+        })).join('');
+
+    } catch (err) {
+        console.error('Failed to load featured listings:', err);
+        container.innerHTML = '<div class="col-12 text-center text-danger py-5">Failed to load featured listings.</div>';
+    }
 }
