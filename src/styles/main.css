@@ -670,3 +670,31 @@ h1, h2, h3, h4, h5, h6 {
         transform: none;
     }
 }
+
+/* ── List View Styles ── */
+.list-view .listing-card {
+    display: flex;
+    flex-direction: row;
+    height: auto !important;
+}
+
+.list-view .listing-card .card-img-wrapper {
+    width: 300px;
+    flex-shrink: 0;
+}
+
+.list-view .listing-card .card-img-wrapper img {
+    height: 100% !important;
+}
+
+@media (max-width: 767.98px) {
+    .list-view .listing-card {
+        flex-direction: column;
+    }
+    .list-view .listing-card .card-img-wrapper {
+        width: 100%;
+    }
+    .list-view .listing-card .card-img-wrapper img {
+        height: 200px !important;
+    }
+}

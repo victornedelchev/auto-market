@@ -9,6 +9,7 @@ import { navigateTo } from '../../utils/router.js';
 
 let currentPage = 1;
 const itemsPerPage = 12;
+let currentView = 'grid'; // 'grid' or 'list'
 
 /**
  * Render the browse page HTML structure.
@@ -39,10 +40,10 @@ export function renderBrowsePage() {
                 <span style="font-weight: 600; color: var(--am-dark);" id="browse-results-count">0</span> cars found
             </p>
             <div class="d-flex gap-1">
-                <button class="btn btn-sm" style="color: var(--am-primary); background: var(--am-primary-100); border-radius: 8px; padding: 6px 10px;">
+                <button id="btn-view-grid" class="btn btn-sm" style="color: ${currentView === 'grid' ? 'var(--am-primary)' : 'var(--am-gray-light)'}; background: ${currentView === 'grid' ? 'var(--am-primary-100)' : 'transparent'}; border-radius: 8px; padding: 6px 10px;">
                     <i class="bi bi-grid-3x3-gap-fill"></i>
                 </button>
-                <button class="btn btn-sm" style="color: var(--am-gray-light); padding: 6px 10px;">
+                <button id="btn-view-list" class="btn btn-sm" style="color: ${currentView === 'list' ? 'var(--am-primary)' : 'var(--am-gray-light)'}; background: ${currentView === 'list' ? 'var(--am-primary-100)' : 'transparent'}; border-radius: 8px; padding: 6px 10px;">
                     <i class="bi bi-list-ul"></i>
                 </button>
             </div>
@@ -53,7 +54,7 @@ export function renderBrowsePage() {
             <p class="mt-3 text-muted">Fetching cars...</p>
         </div>
 
-        <div id="browse-grid" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-4">
+        <div id="browse-grid" class="row ${currentView === 'grid' ? 'row-cols-1 row-cols-md-2 row-cols-lg-3' : 'row-cols-1 list-view'} g-4 mb-4">
             <!-- Rendered listings go here -->
         </div>
 
@@ -73,6 +74,35 @@ export function initBrowsePage() {
         currentPage = 1;
         fetchAndRenderListings();
     };
+
+    const updateViewMode = (mode) => {
+        if (currentView === mode) return;
+        currentView = mode;
+        
+        const btnGrid = document.getElementById('btn-view-grid');
+        const btnList = document.getElementById('btn-view-list');
+        const grid = document.getElementById('browse-grid');
+
+        if (mode === 'grid') {
+            btnGrid.style.color = 'var(--am-primary)';
+            btnGrid.style.background = 'var(--am-primary-100)';
+            btnList.style.color = 'var(--am-gray-light)';
+            btnList.style.background = 'transparent';
+            grid.className = 'row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-4';
+        } else {
+            btnList.style.color = 'var(--am-primary)';
+            btnList.style.background = 'var(--am-primary-100)';
+            btnGrid.style.color = 'var(--am-gray-light)';
+            btnGrid.style.background = 'transparent';
+            grid.className = 'row row-cols-1 g-4 mb-4 list-view';
+        }
+    };
+
+    const btnGrid = document.getElementById('btn-view-grid');
+    if (btnGrid) btnGrid.addEventListener('click', () => updateViewMode('grid'));
+
+    const btnList = document.getElementById('btn-view-list');
+    if (btnList) btnList.addEventListener('click', () => updateViewMode('list'));
 
     if (form) {
         form.addEventListener('submit', (e) => {
