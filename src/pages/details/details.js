@@ -171,19 +171,24 @@ export async function initDetailsPage(params = {}) {
                         </div>
 
                         <!-- Action Buttons -->
-                        <div class="mt-auto d-flex gap-2">
-                            ${isOwner ? `
-                                <button id="btn-edit" class="btn btn-am-primary flex-fill">
-                                    <i class="bi bi-pencil me-2"></i>Edit
-                                </button>
-                                <button id="btn-delete" class="btn btn-am-outline text-danger flex-fill">
-                                    <i class="bi bi-trash me-2"></i>Delete
-                                </button>
-                            ` : `
-                                <button class="btn btn-am-primary flex-fill" onclick="window.location.href='mailto:${seller?.email || ''}'">
-                                    <i class="bi bi-envelope me-2"></i>Contact Seller
-                                </button>
-                            `}
+                        <div class="mt-auto d-flex flex-column gap-2">
+                            <div class="d-flex gap-2">
+                                ${isOwner ? `
+                                    <button id="btn-edit" class="btn btn-am-primary flex-fill">
+                                        <i class="bi bi-pencil me-2"></i>Edit
+                                    </button>
+                                    <button id="btn-delete" class="btn btn-am-outline text-danger flex-fill">
+                                        <i class="bi bi-trash me-2"></i>Delete
+                                    </button>
+                                ` : `
+                                    <button class="btn btn-am-primary flex-fill" onclick="window.location.href='mailto:${seller?.email || ''}'">
+                                        <i class="bi bi-envelope me-2"></i>Contact Seller
+                                    </button>
+                                `}
+                            </div>
+                            <a href="#/pdf/${listing.id}" class="btn btn-am-outline w-100">
+                                <i class="bi bi-file-earmark-pdf me-2"></i>View as PDF
+                            </a>
                         </div>
                     </div>
                 </div>

@@ -26,6 +26,7 @@ import { renderEditPage, initEditPage } from './pages/edit/edit.js';
 import { renderProfilePage, initProfilePage } from './pages/profile/profile.js';
 import { renderFavoritesPage, initFavoritesPage } from './pages/favorites/favorites.js';
 import { renderAdminPage, initAdminPage } from './pages/admin/admin.js';
+import { renderPdfPage, initPdfPage } from './pages/pdf/pdf.js';
 
 /**
  * Render the persistent layout shell (navbar + footer).
@@ -66,6 +67,7 @@ function updateNavbar() {
 addRoute('/', renderHomePage, initHomePage);
 addRoute('/browse', renderBrowsePage, initBrowsePage);
 addRoute('/details/:id', renderDetailsPage, initDetailsPage);
+addRoute('/pdf/:id', renderPdfPage, initPdfPage);
 
 // Guest-only routes (redirect to home if already logged in)
 addRoute('/login', requireGuest(renderLoginPage), initLoginPage);
