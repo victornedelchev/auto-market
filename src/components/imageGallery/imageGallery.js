@@ -32,6 +32,16 @@ export function renderImageGallery(images = [], galleryId = 'carGallery') {
         <div class="carousel-item ${index === 0 ? 'active' : ''}">
             <img src="${src}" class="d-block w-100" alt="Car image ${index + 1}"
                  style="height: 420px; object-fit: cover;" />
+            <button type="button" onclick="window.downloadCarPhoto('${src}', 'car-photo-${index + 1}.jpg')"
+               style="position: absolute; bottom: 16px; right: 16px; width: 40px; height: 40px; 
+                      background: rgba(0,0,0,0.55); backdrop-filter: blur(8px); color: #fff; 
+                      border: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+                      z-index: 10; transition: background 0.2s; cursor: pointer;"
+               onmouseover="this.style.background='var(--am-primary)'"
+               onmouseout="this.style.background='rgba(0,0,0,0.55)'"
+               title="Download Photo">
+                <i class="bi bi-download"></i>
+            </button>
         </div>`).join('');
 
     return `
@@ -72,4 +82,40 @@ export function renderImageGallery(images = [], galleryId = 'carGallery') {
             </span>
         </div>
     </div>`;
+}
+
+if (!window.downloadCarPhoto) {
+    window.downloadCarPhoto = async function(url, filename) {
+        try {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            
+            if (window.showSaveFilePicker) {
+                const handle = await window.showSaveFilePicker({
+                    suggestedName: filename,
+                    types: [{
+                        description: 'Image',
+                        accept: { 'image/jpeg': ['.jpg', '.jpeg'], 'image/png': ['.png'], 'image/webp': ['.webp'] },
+                    }],
+                });
+                const writable = await handle.createWritable();
+                await writable.write(blob);
+                await writable.close();
+            } else {
+                const blobUrl = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(blobUrl);
+            }
+        } catch (err) {
+            if (err.name !== 'AbortError') {
+                console.error('Download failed', err);
+                window.open(url, '_blank');
+            }
+        }
+    };
 }
