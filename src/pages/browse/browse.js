@@ -21,10 +21,10 @@ export function renderBrowsePage() {
     <div style="background: var(--am-gradient-hero); padding: 2.5rem 0 3rem;">
         <div class="container">
             <div class="d-flex align-items-center gap-3">
-                <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center;">
+                <div class="anim-slide-up delay-100" style="width: 48px; height: 48px; border-radius: 12px; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center;">
                     <i class="bi bi-grid-3x3-gap-fill" style="color: var(--am-accent-light); font-size: 1.3rem;"></i>
                 </div>
-                <div>
+                <div class="anim-slide-up delay-200">
                     <h1 style="font-family: var(--am-font-display); font-weight: 800; font-size: 1.8rem; color: #fff; margin: 0;">Browse Cars</h1>
                     <p style="color: rgba(255,255,255,0.5); font-size: 0.9rem; margin: 0;" id="browse-header-count">Loading results...</p>
                 </div>
@@ -33,7 +33,9 @@ export function renderBrowsePage() {
     </div>
 
     <div class="container" style="margin-top: -1.5rem; position: relative; z-index: 2;">
-        ${renderSearchFilters()}
+        <div class="anim-slide-up delay-300">
+            ${renderSearchFilters()}
+        </div>
 
         <div class="d-flex justify-content-between align-items-center mb-3">
             <p style="color: var(--am-gray); font-size: 0.9rem; margin: 0;">
@@ -280,6 +282,10 @@ async function fetchAndRenderListings() {
                 fuel: l.fuel_type
             })).join('');
         }
+        
+        // Initialize scroll animations for the new cards
+        const { initScrollAnimations } = await import('../../utils/animations.js');
+        initScrollAnimations();
 
         // Update counts
         const totalFound = count || 0;

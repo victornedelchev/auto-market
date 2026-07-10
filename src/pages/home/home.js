@@ -15,37 +15,37 @@ export function renderHomePage() {
     <!-- ── Hero Section ── -->
     <section style="background: var(--am-gradient-hero); position: relative; overflow: hidden; padding: 5rem 0 4rem;">
         <!-- Decorative circles -->
-        <div style="position: absolute; top: -80px; right: -60px; width: 300px; height: 300px; border-radius: 50%; background: rgba(37,99,235,0.08);"></div>
-        <div style="position: absolute; bottom: -100px; left: -80px; width: 350px; height: 350px; border-radius: 50%; background: rgba(245,158,11,0.06);"></div>
+        <div class="anim-zoom-in" style="position: absolute; top: -80px; right: -60px; width: 300px; height: 300px; border-radius: 50%; background: rgba(37,99,235,0.08);"></div>
+        <div class="anim-zoom-in delay-200" style="position: absolute; bottom: -100px; left: -80px; width: 350px; height: 350px; border-radius: 50%; background: rgba(245,158,11,0.06);"></div>
 
         <div class="container position-relative">
             <div class="row align-items-center">
                 <div class="col-lg-7">
-                    <div class="d-inline-flex align-items-center gap-2 mb-3 px-3 py-1" style="background: rgba(37,99,235,0.15); border-radius: 99px; border: 1px solid rgba(37,99,235,0.25);">
+                    <div class="d-inline-flex align-items-center gap-2 mb-3 px-3 py-1 anim-slide-up" style="background: rgba(37,99,235,0.15); border-radius: 99px; border: 1px solid rgba(37,99,235,0.25);">
                         <span class="pulse-dot"></span>
                         <span style="color: var(--am-primary-200); font-size: 0.85rem; font-weight: 500;">1,200+ live listings</span>
                     </div>
 
-                    <h1 style="font-family: var(--am-font-display); font-weight: 900; font-size: clamp(2.2rem, 5vw, 3.5rem); color: #fff; line-height: 1.1; margin-bottom: 1.25rem;">
+                    <h1 class="anim-slide-up delay-100" style="font-family: var(--am-font-display); font-weight: 900; font-size: clamp(2.2rem, 5vw, 3.5rem); color: #fff; line-height: 1.1; margin-bottom: 1.25rem;">
                         Find Your Next<br>
                         <span style="background: linear-gradient(135deg, var(--am-accent-light), #f97316); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Dream Car</span>
                     </h1>
 
-                    <p style="color: rgba(255,255,255,0.6); font-size: 1.1rem; max-width: 500px; line-height: 1.7; margin-bottom: 2rem;">
+                    <p class="anim-slide-up delay-200" style="color: rgba(255,255,255,0.6); font-size: 1.1rem; max-width: 500px; line-height: 1.7; margin-bottom: 2rem;">
                         Browse thousands of verified listings, sell with AI-powered tools, and get the best deal on your next vehicle.
                     </p>
 
-                    <div class="d-flex gap-3 flex-wrap">
-                        <a href="#/browse" class="btn btn-am-primary btn-lg px-4">
+                    <div class="d-flex gap-3 flex-wrap anim-slide-up delay-300">
+                        <a href="#/browse" class="btn btn-am-primary btn-lg px-4 hover-glow">
                             <i class="bi bi-search me-2"></i>Browse Cars
                         </a>
-                        <a href="#/create" class="btn btn-am-ghost btn-lg px-4">
+                        <a href="#/create" class="btn btn-am-ghost btn-lg px-4 hover-glow">
                             <i class="bi bi-plus-lg me-2"></i>Sell Your Car
                         </a>
                     </div>
 
                     <!-- Trust badges -->
-                    <div class="d-flex gap-4 mt-4 flex-wrap">
+                    <div class="d-flex gap-4 mt-4 flex-wrap anim-slide-up delay-400">
                         <div class="d-flex align-items-center gap-2">
                             <i class="bi bi-shield-check" style="color: var(--am-success); font-size: 1.1rem;"></i>
                             <span style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">Verified Sellers</span>
@@ -62,8 +62,8 @@ export function renderHomePage() {
                 </div>
 
                 <!-- Hero Stats Panel -->
-                <div class="col-lg-5 d-none d-lg-block">
-                    <div style="background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--am-radius-lg); padding: 2rem;">
+                <div class="col-lg-5 d-none d-lg-block anim-zoom-in delay-200">
+                    <div style="background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--am-radius-lg); padding: 2rem;" class="hover-glow">
                         <div class="row g-3">
                             <div class="col-6">
                                 <div style="background: rgba(37,99,235,0.12); border-radius: var(--am-radius); padding: 1.25rem; text-align: center;">
@@ -98,7 +98,7 @@ export function renderHomePage() {
 
     <!-- ── Featured Listings ── -->
     <section class="container" style="margin-top: -2rem; position: relative; z-index: 2;">
-        <div class="card-am-static p-4">
+        <div class="card-am-static p-4 animate-on-scroll">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div class="section-header mb-0">
                     <div class="section-icon"><i class="bi bi-star-fill"></i></div>
@@ -121,7 +121,7 @@ export function renderHomePage() {
 
     <!-- ── How It Works ── -->
     <section class="container py-5">
-        <div class="text-center mb-5">
+        <div class="text-center mb-5 animate-on-scroll">
             <h2 style="font-family: var(--am-font-display); font-weight: 800; font-size: 2rem;">
                 How It <span class="text-gradient">Works</span>
             </h2>
@@ -130,7 +130,7 @@ export function renderHomePage() {
             </p>
         </div>
         <div class="row g-4">
-            <div class="col-md-4">
+            <div class="col-md-4 animate-on-scroll delay-100">
                 <div class="card-am-static text-center p-4 h-100 hover-lift">
                     <div style="width: 64px; height: 64px; border-radius: 16px; background: var(--am-primary-100); color: var(--am-primary); display: inline-flex; align-items: center; justify-content: center; font-size: 1.6rem; margin-bottom: 1rem;">
                         <i class="bi bi-search-heart"></i>
@@ -141,7 +141,7 @@ export function renderHomePage() {
                     </p>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-4 animate-on-scroll delay-200">
                 <div class="card-am-static text-center p-4 h-100 hover-lift">
                     <div style="width: 64px; height: 64px; border-radius: 16px; background: #fef3c7; color: var(--am-accent-dark); display: inline-flex; align-items: center; justify-content: center; font-size: 1.6rem; margin-bottom: 1rem;">
                         <i class="bi bi-chat-dots"></i>
@@ -152,7 +152,7 @@ export function renderHomePage() {
                     </p>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-4 animate-on-scroll delay-300">
                 <div class="card-am-static text-center p-4 h-100 hover-lift">
                     <div style="width: 64px; height: 64px; border-radius: 16px; background: #d1fae5; color: var(--am-success); display: inline-flex; align-items: center; justify-content: center; font-size: 1.6rem; margin-bottom: 1rem;">
                         <i class="bi bi-hand-thumbs-up"></i>
@@ -204,6 +204,9 @@ export async function initHomePage() {
             image: l.coverUrl,
             fuel: l.fuel_type
         })).join('');
+
+        const { initScrollAnimations } = await import('../../utils/animations.js');
+        initScrollAnimations();
 
     } catch (err) {
         console.error('Failed to load featured listings:', err);

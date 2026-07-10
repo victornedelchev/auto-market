@@ -20,9 +20,9 @@ export function renderListingCard(listing = {}) {
     } = listing;
 
     return `
-    <div class="col" id="listing-card-${id}">
+    <div class="col animate-on-scroll" id="listing-card-${id}">
         <div class="listing-card h-100">
-            <div class="card-img-wrapper" style="position: relative;">
+            <div class="card-img-wrapper img-hover-zoom" style="position: relative;">
                 <img src="${image}" alt="${title}"
                      style="width: 100%; height: 200px; object-fit: cover; display: block;" />
                 <button class="favorite-btn" data-id="${id}" title="${listing.isFavorite ? 'Remove from favorites' : 'Add to favorites'}" aria-label="Favorite">

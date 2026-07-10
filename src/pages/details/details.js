@@ -85,12 +85,12 @@ export async function initDetailsPage(params = {}) {
 
             <div class="row g-4">
                 <!-- Image Gallery -->
-                <div class="col-lg-7" id="details-gallery-container">
+                <div class="col-lg-7 anim-slide-right" id="details-gallery-container">
                     ${galleryHtml}
                 </div>
 
                 <!-- Listing Info Panel -->
-                <div class="col-lg-5">
+                <div class="col-lg-5 anim-slide-up">
                     <div class="card-am-static p-4 h-100 d-flex flex-column">
                         <div class="d-flex align-items-start justify-content-between mb-2">
                             <div>
@@ -191,7 +191,7 @@ export async function initDetailsPage(params = {}) {
 
             <!-- Description & Seller Info -->
             <div class="row mt-4 g-4">
-                <div class="col-lg-8">
+                <div class="col-lg-8 animate-on-scroll">
                     <div class="card-am-static p-4 h-100">
                         <div class="section-header">
                             <div class="section-icon"><i class="bi bi-text-paragraph"></i></div>
@@ -202,7 +202,7 @@ export async function initDetailsPage(params = {}) {
                 </div>
 
                 <!-- Seller Info -->
-                <div class="col-lg-4">
+                <div class="col-lg-4 animate-on-scroll delay-200">
                     <div class="card-am-static p-4 h-100">
                         <div class="section-header">
                             <div class="section-icon"><i class="bi bi-person"></i></div>
@@ -231,6 +231,10 @@ export async function initDetailsPage(params = {}) {
                 </div>
             </div>
         `;
+
+        // Initialize animations
+        const { initScrollAnimations } = await import('../../utils/animations.js');
+        initScrollAnimations();
 
         // Event Listeners
         const favBtn = document.getElementById('btn-favorite');

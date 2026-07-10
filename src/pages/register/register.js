@@ -14,7 +14,7 @@ import { showToast } from '../../utils/toastService.js';
 export function renderRegisterPage() {
     return `
     <div class="container py-5">
-        <div class="auth-card" style="max-width: 520px;">
+        <div class="auth-card anim-slide-up" style="max-width: 520px;">
             <div class="auth-header">
                 <div style="width: 56px; height: 56px; border-radius: 16px; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1rem; border: 1px solid rgba(255,255,255,0.15);">
                     <i class="bi bi-person-plus" style="font-size: 1.5rem;"></i>
