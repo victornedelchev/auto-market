@@ -75,21 +75,38 @@ export async function initFavoritesPage() {
         countLabel.textContent = `${favorites.length} saved car${favorites.length === 1 ? '' : 's'}`;
 
         // Fetch images for each listing
-        const listingsWithImages = await Promise.all(favorites.map(async (fav) => {
-            const listing = fav.car_listings;
-            const { urls } = await getListingImageUrls(listing.id);
+        let listingsWithImages = await Promise.all(favorites.map(async (fav) => {
+            let listing = fav.car_listings;
+            if (Array.isArray(listing)) listing = listing[0];
+            
+            if (!listing || !listing.id) return null;
+
+            let urls = [];
+            try {
+                const result = await getListingImageUrls(listing.id);
+                urls = result.urls;
+            } catch (err) {
+                console.error('Failed to get images for listing', listing.id, err);
+            }
+
             return {
                 ...listing,
                 isFavorite: true,
+                fuel: listing.fuel_type,
                 image: urls && urls.length > 0 ? urls[0] : 'https://dummyimage.com/400x250/1e293b/94a3b8&text=No+Image'
             };
         }));
+
+        listingsWithImages = listingsWithImages.filter(l => l !== null);
 
         container.innerHTML = `
             <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-4" id="favorites-grid">
                 ${listingsWithImages.map(l => renderListingCard(l)).join('')}
             </div>
         `;
+
+        const { initScrollAnimations } = await import('../../utils/animations.js');
+        initScrollAnimations();
 
         // Add event listeners for the remove from favorites buttons
         const grid = document.getElementById('favorites-grid');

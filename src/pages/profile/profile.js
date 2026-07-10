@@ -9,6 +9,7 @@ import { getListingsByUser } from '../../services/listingService.js';
 import { getListingImageUrls } from '../../services/storageService.js';
 import { renderListingCard } from '../../components/listingCard/listingCard.js';
 import { showToast } from '../../utils/toastService.js';
+import { initScrollAnimations } from '../../utils/animations.js';
 
 /**
  * Render the profile page (loading state initially).
@@ -66,6 +67,7 @@ export async function initProfilePage() {
 
     container.innerHTML = buildProfileView(user, profile, stats, listings, listingImages);
     attachViewListeners(user, profile, stats);
+    initScrollAnimations();
 }
 
 /**
@@ -460,6 +462,7 @@ async function handleSaveProfile(e, user, profile, stats) {
         const container = document.getElementById('profile-page');
         container.innerHTML = buildProfileView(user, updatedProfile || profile, stats, updatedListings, updatedListingImages);
         attachViewListeners(user, updatedProfile || profile, stats);
+        initScrollAnimations();
 
         toggleEditSection(true);
         showToast('Profile updated successfully!', 'success');
@@ -515,6 +518,7 @@ async function handleRemoveAvatar(user, profile, stats) {
         const container = document.getElementById('profile-page');
         container.innerHTML = buildProfileView(user, updatedProfile || profile, stats, updatedListings, updatedListingImages);
         attachViewListeners(user, updatedProfile || profile, stats);
+        initScrollAnimations();
 
         toggleEditSection(true);
         showToast('Avatar removed successfully!', 'success');
