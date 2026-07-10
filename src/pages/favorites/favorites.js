@@ -9,6 +9,9 @@ import { getUser } from '../../utils/authState.js';
 import { navigateTo } from '../../utils/router.js';
 import { showToast } from '../../utils/toastService.js';
 
+let currentFavoritesPage = 1;
+const FAVORITES_PER_PAGE = 9;
+
 export function renderFavoritesPage() {
     return `
     <!-- Page Header -->
@@ -26,12 +29,15 @@ export function renderFavoritesPage() {
         </div>
     </div>
 
-    <div class="container" style="margin-top: -1.5rem; position: relative; z-index: 2;" id="favorites-page-content">
-        <div class="text-center py-5">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
+    <div class="container" style="margin-top: -1.5rem; position: relative; z-index: 2;">
+        <div id="favorites-page-content">
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
             </div>
         </div>
+        <div id="favorites-pagination" class="d-flex justify-content-center mt-5 mb-4"></div>
     </div>`;
 }
 
@@ -44,11 +50,41 @@ export async function initFavoritesPage() {
     }
 
     const container = document.getElementById('favorites-page-content');
+    if (!container) return;
+    
+    // Set up event delegation for unfavorite
+    container.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.favorite-btn');
+        if (!btn) return;
+        
+        const listingId = btn.getAttribute('data-id');
+        if (listingId) {
+            try {
+                await removeFavorite(user.id, listingId);
+                loadFavorites(currentFavoritesPage);
+            } catch (err) {
+                showToast('Failed to remove from favorites.', 'error');
+            }
+        }
+    });
+
+    loadFavorites();
+}
+
+async function loadFavorites(page = 1) {
+    const user = getUser();
+    if (!user) return;
+
+    currentFavoritesPage = page;
+    const container = document.getElementById('favorites-page-content');
     const countLabel = document.getElementById('favorites-count-label');
+    const paginationContainer = document.getElementById('favorites-pagination');
     if (!container) return;
 
+    container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
+    
     try {
-        const { data: favorites, error } = await getFavorites(user.id);
+        const { data: favorites, count, error } = await getFavorites(user.id, { page, limit: FAVORITES_PER_PAGE });
         
         if (error) {
             throw error;
@@ -100,60 +136,72 @@ export async function initFavoritesPage() {
         listingsWithImages = listingsWithImages.filter(l => l !== null);
 
         container.innerHTML = `
-            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-4" id="favorites-grid">
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-4 mt-3" id="favorites-grid">
                 ${listingsWithImages.map(l => renderListingCard(l)).join('')}
             </div>
         `;
 
         const { initScrollAnimations } = await import('../../utils/animations.js');
         initScrollAnimations();
-
-        // Add event listeners for the remove from favorites buttons
-        const grid = document.getElementById('favorites-grid');
-        grid.addEventListener('click', async (e) => {
-            const btn = e.target.closest('.favorite-btn');
-            if (!btn) return;
-            
-            const listingId = btn.getAttribute('data-id');
-            if (listingId) {
-                try {
-                    await removeFavorite(user.id, listingId);
-                    
-                    // Remove the card from the UI
-                    const card = document.getElementById(`listing-card-${listingId}`);
-                    if (card) {
-                        card.remove();
-                    }
-                    
-                    // Update count
-                    const currentCards = grid.querySelectorAll('.col').length;
-                    countLabel.textContent = `${currentCards} saved car${currentCards === 1 ? '' : 's'}`;
-                    
-                    // If empty, show empty state
-                    if (currentCards === 0) {
-                        container.innerHTML = `
-                            <div class="card-am-static text-center py-5 px-4">
-                                <div style="width: 80px; height: 80px; border-radius: 50%; background: #fee2e2; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
-                                    <i class="bi bi-heart" style="font-size: 2rem; color: var(--am-danger);"></i>
-                                </div>
-                                <h4 style="font-family: var(--am-font-display);">No favorites yet</h4>
-                                <p style="color: var(--am-gray); max-width: 400px; margin: 0.5rem auto 1.5rem;">
-                                    Start browsing and tap the heart icon on any listing to save it here.
-                                </p>
-                                <a href="#/browse" class="btn btn-am-primary">
-                                    <i class="bi bi-search me-1"></i>Browse Cars
-                                </a>
-                           </div>`;
-                    }
-                } catch (err) {
-                    showToast('Failed to remove from favorites.', 'error');
-                }
-            }
-        });
+        
+        renderPagination(
+            'favorites-pagination', 
+            currentFavoritesPage, 
+            Math.ceil(count / FAVORITES_PER_PAGE), 
+            (newPage) => loadFavorites(newPage)
+        );
 
     } catch (err) {
         console.error('Error loading favorites:', err);
         showToast('Could not load favorites.', 'error');
         container.innerHTML = `<div class="alert alert-danger">An error occurred while loading your favorites.</div>`;
     }
+}
+
+function renderPagination(containerId, currentPage, totalPages, onPageChange) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+    }
+
+    let html = '<ul class="pagination pagination-sm mb-0">';
+    
+    html += `
+        <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+            <button class="page-link" data-page="${currentPage - 1}">&laquo;</button>
+        </li>
+    `;
+
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+            html += `
+                <li class="page-item ${i === currentPage ? 'active' : ''}">
+                    <button class="page-link" data-page="${i}">${i}</button>
+                </li>
+            `;
+        } else if (i === currentPage - 2 || i === currentPage + 2) {
+            html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+        }
+    }
+
+    html += `
+        <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+            <button class="page-link" data-page="${currentPage + 1}">&raquo;</button>
+        </li>
+    </ul>`;
+
+    container.innerHTML = html;
+
+    const buttons = container.querySelectorAll('button.page-link');
+    buttons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const newPage = parseInt(e.target.getAttribute('data-page'), 10);
+            if (!isNaN(newPage) && newPage >= 1 && newPage <= totalPages) {
+                onPageChange(newPage);
+            }
+        });
+    });
 }

@@ -166,13 +166,17 @@ export async function getListingsByUser(userId, { page = 1, limit = 12 } = {}) {
  * @param {string} userId
  * @returns {Promise<{ data: Array|null, error: Object|null }>}
  */
-export async function getFavorites(userId) {
-    const { data, error } = await supabase
-        .from('favorites')
-        .select('listing_id, car_listings(*)')
-        .eq('user_id', userId);
+export async function getFavorites(userId, { page = 1, limit = 12 } = {}) {
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
 
-    return { data, error };
+    const { data, count, error } = await supabase
+        .from('favorites')
+        .select('listing_id, car_listings(*)', { count: 'exact' })
+        .eq('user_id', userId)
+        .range(from, to);
+
+    return { data, count, error };
 }
 
 /**

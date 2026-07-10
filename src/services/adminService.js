@@ -7,16 +7,20 @@ import { supabase } from './supabase.js';
 /**
  * Fetch all users (profiles) and their roles.
  */
-export async function getAllUsers() {
-    const { data, error } = await supabase
+export async function getAllUsers({ page = 1, limit = 10 } = {}) {
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    const { data, count, error } = await supabase
         .from('profiles')
         .select(`
             *,
             user_roles ( role )
-        `)
-        .order('created_at', { ascending: false });
+        `, { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(from, to);
     
-    return { data, error };
+    return { data, count, error };
 }
 
 /**

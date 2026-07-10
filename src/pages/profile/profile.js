@@ -11,6 +11,9 @@ import { renderListingCard } from '../../components/listingCard/listingCard.js';
 import { showToast } from '../../utils/toastService.js';
 import { initScrollAnimations } from '../../utils/animations.js';
 
+let currentListingsPage = 1;
+const LISTINGS_PER_PAGE = 9;
+
 /**
  * Render the profile page (loading state initially).
  * @returns {string} The page markup.
@@ -34,15 +37,13 @@ export async function initProfilePage() {
     const user = getUser();
     if (!user) return;
 
-    const [profileResult, statsResult, listingsResult] = await Promise.all([
+    const [profileResult, statsResult] = await Promise.all([
         getProfile(user.id),
-        getUserStats(user.id),
-        getListingsByUser(user.id)
+        getUserStats(user.id)
     ]);
 
     const profile = profileResult.data;
     const stats = statsResult;
-    const listings = listingsResult.data || [];
     const container = document.getElementById('profile-page');
 
     if (!profile || profileResult.error) {
@@ -54,26 +55,16 @@ export async function initProfilePage() {
         return;
     }
 
-    // Fetch cover image for each listing
-    const listingImages = {};
-    if (listings.length > 0) {
-        await Promise.all(listings.map(async (l) => {
-            const { urls } = await getListingImageUrls(l.id);
-            if (urls && urls.length > 0) {
-                listingImages[l.id] = urls[0];
-            }
-        }));
-    }
-
-    container.innerHTML = buildProfileView(user, profile, stats, listings, listingImages);
+    container.innerHTML = buildProfileView(user, profile, stats);
     attachViewListeners(user, profile, stats);
     initScrollAnimations();
+    loadUserListings(1);
 }
 
 /**
  * Build the full profile view HTML.
  */
-function buildProfileView(user, profile, stats, listings, listingImages = {}) {
+function buildProfileView(user, profile, stats) {
     const initials = getInitials(profile.full_name || user.email);
     const displayName = profile.full_name || user.email.split('@')[0];
     const memberSince = new Date(profile.created_at).toLocaleDateString('en-US', {
@@ -273,34 +264,14 @@ function buildProfileView(user, profile, stats, listings, listingImages = {}) {
                     <i class="bi bi-plus-lg me-1"></i>New Listing
                 </a>
             </div>
-            
-            ${listings.length > 0 
-                ? `<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-4">
-                       ${listings.map(l => {
-                           const coverImage = listingImages[l.id] || 'https://dummyimage.com/400x250/1e293b/94a3b8&text=No+Image';
-                           const displayListing = {
-                               ...l,
-                               image: coverImage,
-                               fuel: l.fuel_type || 'N/A'
-                           };
-                           // We will inject a custom edit button by wrapping the card
-                           const cardHtml = renderListingCard(displayListing);
-                           return `
-                           <div class="position-relative">
-                               ${cardHtml}
-                               <a href="#/edit/${l.id}" class="btn btn-sm btn-am-primary position-absolute" style="top: 15px; right: 25px; z-index: 10; border-radius: 6px; box-shadow: var(--am-shadow);">
-                                   <i class="bi bi-pencil-square me-1"></i>Edit
-                               </a>
-                           </div>`;
-                       }).join('')}
-                   </div>`
-                : `<div class="text-center py-5 mb-4" style="background: var(--am-light); border-radius: var(--am-radius); border: 2px dashed #e2e8f0;">
-                       <i class="bi bi-car-front text-muted" style="font-size: 3rem;"></i>
-                       <h4 class="mt-3" style="color: var(--am-dark-700);">No listings yet</h4>
-                       <p class="text-muted">You haven't posted any cars for sale.</p>
-                       <a href="#/create" class="btn btn-am-primary mt-2">Create your first listing</a>
-                   </div>`
-            }
+            <div id="profile-listings-content">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            <div id="profile-listings-pagination" class="d-flex justify-content-center mt-5 mb-4"></div>
         </div>
     </div>`;
 }
@@ -441,28 +412,14 @@ async function handleSaveProfile(e, user, profile, stats) {
         // Refresh auth state cache (this triggers navbar re-render)
         await forceProfileRefresh();
 
-        // Re-fetch and re-render the whole page
-        const [profileResult, listingsResult] = await Promise.all([
-            getProfile(user.id),
-            getListingsByUser(user.id)
-        ]);
+        const profileResult = await getProfile(user.id);
         const updatedProfile = profileResult.data;
-        const updatedListings = listingsResult.data || [];
-        
-        const updatedListingImages = {};
-        if (updatedListings.length > 0) {
-            await Promise.all(updatedListings.map(async (l) => {
-                const { urls } = await getListingImageUrls(l.id);
-                if (urls && urls.length > 0) {
-                    updatedListingImages[l.id] = urls[0];
-                }
-            }));
-        }
 
         const container = document.getElementById('profile-page');
-        container.innerHTML = buildProfileView(user, updatedProfile || profile, stats, updatedListings, updatedListingImages);
+        container.innerHTML = buildProfileView(user, updatedProfile || profile, stats);
         attachViewListeners(user, updatedProfile || profile, stats);
         initScrollAnimations();
+        loadUserListings(currentListingsPage);
 
         toggleEditSection(true);
         showToast('Profile updated successfully!', 'success');
@@ -497,28 +454,14 @@ async function handleRemoveAvatar(user, profile, stats) {
         // Refresh auth state cache (this triggers navbar re-render)
         await forceProfileRefresh();
 
-        // Re-fetch and re-render
-        const [profileResult, listingsResult] = await Promise.all([
-            getProfile(user.id),
-            getListingsByUser(user.id)
-        ]);
+        const profileResult = await getProfile(user.id);
         const updatedProfile = profileResult.data;
-        const updatedListings = listingsResult.data || [];
-
-        const updatedListingImages = {};
-        if (updatedListings.length > 0) {
-            await Promise.all(updatedListings.map(async (l) => {
-                const { urls } = await getListingImageUrls(l.id);
-                if (urls && urls.length > 0) {
-                    updatedListingImages[l.id] = urls[0];
-                }
-            }));
-        }
 
         const container = document.getElementById('profile-page');
-        container.innerHTML = buildProfileView(user, updatedProfile || profile, stats, updatedListings, updatedListingImages);
+        container.innerHTML = buildProfileView(user, updatedProfile || profile, stats);
         attachViewListeners(user, updatedProfile || profile, stats);
         initScrollAnimations();
+        loadUserListings(currentListingsPage);
 
         toggleEditSection(true);
         showToast('Avatar removed successfully!', 'success');
@@ -550,4 +493,121 @@ function getInitials(name) {
         return (parts[0][0] + parts[1][0]).toUpperCase();
     }
     return (parts[0]?.[0] || '?').toUpperCase();
+}
+
+async function loadUserListings(page = 1) {
+    const user = getUser();
+    if (!user) return;
+
+    currentListingsPage = page;
+    const container = document.getElementById('profile-listings-content');
+    if (!container) return;
+
+    container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div></div>';
+
+    const { data: listings, count, error } = await getListingsByUser(user.id, { page, limit: LISTINGS_PER_PAGE });
+
+    if (error || !listings) {
+        container.innerHTML = '<div class="alert alert-danger">Failed to load listings.</div>';
+        return;
+    }
+
+    if (listings.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-5 mb-4" style="background: var(--am-light); border-radius: var(--am-radius); border: 2px dashed #e2e8f0;">
+                <i class="bi bi-car-front text-muted" style="font-size: 3rem;"></i>
+                <h4 class="mt-3" style="color: var(--am-dark-700);">No listings yet</h4>
+                <p class="text-muted">You haven't posted any cars for sale.</p>
+                <a href="#/create" class="btn btn-am-primary mt-2">Create your first listing</a>
+            </div>
+        `;
+        document.getElementById('profile-listings-pagination').innerHTML = '';
+        return;
+    }
+
+    const listingImages = {};
+    await Promise.all(listings.map(async (l) => {
+        const { urls } = await getListingImageUrls(l.id);
+        if (urls && urls.length > 0) {
+            listingImages[l.id] = urls[0];
+        }
+    }));
+
+    container.innerHTML = `
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-4">
+            ${listings.map(l => {
+                const coverImage = listingImages[l.id] || 'https://dummyimage.com/400x250/1e293b/94a3b8&text=No+Image';
+                const displayListing = {
+                    ...l,
+                    image: coverImage,
+                    fuel: l.fuel_type || 'N/A'
+                };
+                const cardHtml = renderListingCard(displayListing);
+                return `
+                <div class="position-relative">
+                    ${cardHtml}
+                    <a href="#/edit/${l.id}" class="btn btn-sm btn-am-primary position-absolute" style="top: 15px; right: 25px; z-index: 10; border-radius: 6px; box-shadow: var(--am-shadow);">
+                        <i class="bi bi-pencil-square me-1"></i>Edit
+                    </a>
+                </div>`;
+            }).join('')}
+        </div>
+    `;
+
+    initScrollAnimations();
+
+    renderPagination(
+        'profile-listings-pagination',
+        currentListingsPage,
+        Math.ceil(count / LISTINGS_PER_PAGE),
+        (newPage) => loadUserListings(newPage)
+    );
+}
+
+function renderPagination(containerId, currentPage, totalPages, onPageChange) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+    }
+
+    let html = '<ul class="pagination pagination-sm mb-0">';
+    
+    html += `
+        <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+            <button class="page-link" data-page="${currentPage - 1}">&laquo;</button>
+        </li>
+    `;
+
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+            html += `
+                <li class="page-item ${i === currentPage ? 'active' : ''}">
+                    <button class="page-link" data-page="${i}">${i}</button>
+                </li>
+            `;
+        } else if (i === currentPage - 2 || i === currentPage + 2) {
+            html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+        }
+    }
+
+    html += `
+        <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+            <button class="page-link" data-page="${currentPage + 1}">&raquo;</button>
+        </li>
+    </ul>`;
+
+    container.innerHTML = html;
+
+    const buttons = container.querySelectorAll('button.page-link');
+    buttons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const newPage = parseInt(e.target.getAttribute('data-page'), 10);
+            if (!isNaN(newPage) && newPage >= 1 && newPage <= totalPages) {
+                onPageChange(newPage);
+            }
+        });
+    });
 }

@@ -9,6 +9,11 @@ import { showConfirmModal } from '../../utils/modalService.js';
 import { getListingImageUrls, deleteImage, uploadMultipleImages } from '../../services/storageService.js';
 import { getUser } from '../../utils/authState.js';
 
+let currentUsersPage = 1;
+const USERS_PER_PAGE = 10;
+let currentListingsPage = 1;
+const LISTINGS_PER_PAGE = 10;
+
 export function renderAdminPage() {
     return `
     <style>
@@ -232,6 +237,7 @@ export function renderAdminPage() {
                                 </tbody>
                             </table>
                         </div>
+                        <div id="admin-users-pagination" class="d-flex justify-content-center py-3 border-top"></div>
                     </div>
                 </div>
 
@@ -252,6 +258,7 @@ export function renderAdminPage() {
                                 </tbody>
                             </table>
                         </div>
+                        <div id="admin-listings-pagination" class="d-flex justify-content-center py-3 border-top"></div>
                     </div>
                 </div>
             </div>
@@ -294,31 +301,31 @@ export function initAdminPage() {
             if (await showConfirmModal('Deactivate User', 'Are you sure you want to deactivate this user?')) {
                 const { error } = await deactivateUser(id);
                 if (error) showToast('Failed to deactivate user', 'danger');
-                else { showToast('User deactivated', 'success'); loadUsers(); }
+                else { showToast('User deactivated', 'success'); loadUsers(currentUsersPage); }
             }
         } else if (action === 'activate') {
             if (await showConfirmModal('Activate User', 'Are you sure you want to activate this user?', 'Activate', 'success')) {
                 const { error } = await activateUser(id);
                 if (error) showToast('Failed to activate user', 'danger');
-                else { showToast('User activated', 'success'); loadUsers(); }
+                else { showToast('User activated', 'success'); loadUsers(currentUsersPage); }
             }
         } else if (action === 'make-admin') {
             if (await showConfirmModal('Make Admin', 'Elevate this user to Administrator status?', 'Confirm', 'success')) {
                 const { error } = await setRole(id, 'admin');
                 if (error) showToast(error.message || 'Failed to update role', 'danger');
-                else { showToast('User elevated to Admin', 'success'); loadUsers(); }
+                else { showToast('User elevated to Admin', 'success'); loadUsers(currentUsersPage); }
             }
         } else if (action === 'make-user') {
             if (await showConfirmModal('Remove Admin', 'Remove Administrator status from this user?', 'Confirm', 'warning')) {
                 const { error } = await setRole(id, 'user');
                 if (error) showToast(error.message || 'Failed to update role', 'danger');
-                else { showToast('Admin privileges removed', 'success'); loadUsers(); }
+                else { showToast('Admin privileges removed', 'success'); loadUsers(currentUsersPage); }
             }
         } else if (action === 'delete') {
             if (await showConfirmModal('Delete User', 'Permanently delete this user, their profile, and all their listings? This action cannot be undone.', 'Delete Permanently', 'danger')) {
                 const { error } = await deleteUser(id);
                 if (error) showToast(error.message || 'Failed to delete user', 'danger');
-                else { showToast('User permanently deleted', 'success'); loadUsers(); loadStats(); }
+                else { showToast('User permanently deleted', 'success'); loadUsers(currentUsersPage); loadStats(); }
             }
         } else if (action === 'edit') {
             const username = btn.getAttribute('data-username');
@@ -354,7 +361,7 @@ export function initAdminPage() {
             if (await showConfirmModal('Delete Listing', 'Permanently delete this listing?')) {
                 const { error } = await deleteListing(id);
                 if (error) showToast('Failed to delete listing', 'danger');
-                else { showToast('Listing deleted', 'success'); loadListings(); loadStats(); }
+                else { showToast('Listing deleted', 'success'); loadListings(currentListingsPage); loadStats(); }
             }
         } else if (action === 'manage-images') {
             openManageImagesModal(id);
@@ -443,9 +450,12 @@ async function loadUsers() {
                 <td><small class="text-muted">${user.id.split('-')[0]}</small></td>
                 <td>
                     <div class="d-flex align-items-center gap-2">
-                        <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--am-gradient-primary); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 0.7rem; font-weight: 700;">
-                            ${(user.username || 'U')[0].toUpperCase()}
-                        </div>
+                        ${user.avatar_url 
+                            ? `<img src="${user.avatar_url}" alt="${user.username}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(0,0,0,0.1);">`
+                            : `<div style="width: 32px; height: 32px; border-radius: 50%; background: var(--am-gradient-primary); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 0.7rem; font-weight: 700;">
+                                ${(user.username || 'U')[0].toUpperCase()}
+                               </div>`
+                        }
                         <div>
                             <span style="font-weight: 500; display: block;">${user.username || 'Unknown'}</span>
                             <small class="text-muted" style="font-size: 0.75rem;">${user.full_name || ''}</small>
@@ -483,15 +493,23 @@ async function loadUsers() {
             </tr>
         `;
     }).join('');
+
+    renderPagination(
+        'admin-users-pagination', 
+        currentUsersPage, 
+        Math.ceil(count / USERS_PER_PAGE), 
+        (newPage) => loadUsers(newPage)
+    );
 }
 
-async function loadListings() {
+async function loadListings(page = 1) {
+    currentListingsPage = page;
     const tbody = document.getElementById('admin-listings-tbody');
     if (!tbody) return;
 
     tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4"><div class="spinner-border text-primary"></div></td></tr>';
 
-    const { data, error } = await getListings({ limit: 1000 }); // fetch up to 1000
+    const { data, count, error } = await getListings({ page, limit: LISTINGS_PER_PAGE });
     if (error || !data) {
         tbody.innerHTML = '<tr><td colspan="4" class="text-danger text-center">Failed to load listings</td></tr>';
         return;
@@ -523,6 +541,62 @@ async function loadListings() {
             </td>
         </tr>
     `).join('');
+
+    renderPagination(
+        'admin-listings-pagination', 
+        currentListingsPage, 
+        Math.ceil(count / LISTINGS_PER_PAGE), 
+        (newPage) => loadListings(newPage)
+    );
+}
+
+function renderPagination(containerId, currentPage, totalPages, onPageChange) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+    }
+
+    let html = '<ul class="pagination pagination-sm mb-0">';
+    
+    html += `
+        <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+            <button class="page-link" data-page="${currentPage - 1}">&laquo;</button>
+        </li>
+    `;
+
+    for (let i = 1; i <= totalPages; i++) {
+        // Show limited pages (first, last, current, +/- 1)
+        if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+            html += `
+                <li class="page-item ${i === currentPage ? 'active' : ''}">
+                    <button class="page-link" data-page="${i}">${i}</button>
+                </li>
+            `;
+        } else if (i === currentPage - 2 || i === currentPage + 2) {
+            html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+        }
+    }
+
+    html += `
+        <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+            <button class="page-link" data-page="${currentPage + 1}">&raquo;</button>
+        </li>
+    </ul>`;
+
+    container.innerHTML = html;
+
+    const buttons = container.querySelectorAll('button.page-link');
+    buttons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const newPage = parseInt(e.target.getAttribute('data-page'), 10);
+            if (!isNaN(newPage) && newPage >= 1 && newPage <= totalPages) {
+                onPageChange(newPage);
+            }
+        });
+    });
 }
 
 async function openManageImagesModal(listingId) {
@@ -695,7 +769,7 @@ async function openEditUserModal(userId, currentUsername, currentFullname) {
             } else {
                 showToast('User profile updated successfully', 'success');
                 modal.hide();
-                loadUsers();
+                loadUsers(currentUsersPage);
             }
         });
 
