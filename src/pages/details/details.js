@@ -227,6 +227,10 @@ export async function initDetailsPage(params = {}) {
                                 <i class="bi bi-telephone" style="color: var(--am-gray); font-size: 0.85rem;"></i>
                                 <span style="font-size: 0.85rem; color: var(--am-gray);">${seller?.phone || 'No phone provided'}</span>
                             </div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <i class="bi bi-envelope" style="color: var(--am-gray); font-size: 0.85rem;"></i>
+                                <span style="font-size: 0.85rem; color: var(--am-gray);">${seller?.email || 'No email provided'}</span>
+                            </div>
                             <div class="d-flex align-items-center gap-2">
                                 <i class="bi bi-clock" style="color: var(--am-gray); font-size: 0.85rem;"></i>
                                 <span style="font-size: 0.85rem; color: var(--am-gray);">Joined ${seller ? new Date(seller.created_at).getFullYear() : 'Unknown'}</span>
