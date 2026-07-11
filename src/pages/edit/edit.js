@@ -46,6 +46,23 @@ export function renderEditPage(params = {}) {
             </div>
 
             <form id="edit-listing-form" data-listing-id="${id}" class="needs-validation" novalidate style="display: none;">
+                <!-- Section 0: Quick Fill -->
+                <div class="p-4 mb-3" style="border-bottom: 1px solid #e2e8f0; background: rgba(13, 202, 240, 0.05);">
+                    <div class="section-header mb-3">
+                        <div class="section-icon" style="background: rgba(13, 202, 240, 0.1); color: var(--am-info);"><i class="bi bi-magic"></i></div>
+                        <div>
+                            <h3 style="font-size: 1.15rem;">AI Extract Specifications</h3>
+                            <span class="section-subtitle">Paste a car description to automatically extract specifications</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <textarea class="form-control" id="edit-extract-text" rows="3" placeholder="Paste car details here..."></textarea>
+                    </div>
+                    <button type="button" id="btn-extract-specs-edit" class="btn btn-sm btn-am-info hover-glow" style="border-radius: var(--am-radius-full); padding: 0.4rem 1rem;">
+                        ⚡ Extract Specifications
+                    </button>
+                </div>
+
                 <!-- Section 1: Vehicle Info -->
                 <div class="p-4" style="border-bottom: 1px solid #e2e8f0;">
                     <div class="section-header">
@@ -57,7 +74,12 @@ export function renderEditPage(params = {}) {
                     </div>
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label for="edit-title" class="form-label">Listing Title *</label>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label for="edit-title" class="form-label mb-0">Listing Title *</label>
+                                <button type="button" id="btn-suggest-title-edit" class="btn btn-sm btn-am-primary hover-glow" title="Suggest title with AI" style="border-radius: var(--am-radius-full); padding: 0.2rem 0.8rem;">
+                                    💡 Suggest Title
+                                </button>
+                            </div>
                             <input type="text" class="form-control" id="edit-title" required />
                             <div class="invalid-feedback">Please enter a title.</div>
                         </div>
@@ -349,6 +371,130 @@ export async function initEditPage(params) {
         });
 
         imageInput.addEventListener('change', renderPreviews);
+
+        // AI Extract Specs logic
+        const btnExtractSpecsEdit = document.getElementById('btn-extract-specs-edit');
+        if (btnExtractSpecsEdit) {
+            btnExtractSpecsEdit.addEventListener('click', async () => {
+                const textarea = document.getElementById('edit-extract-text');
+                const text = textarea.value.trim();
+                if (!text) {
+                    showToast('Please paste a description first.', 'warning');
+                    return;
+                }
+
+                const originalText = btnExtractSpecsEdit.innerHTML;
+                btnExtractSpecsEdit.disabled = true;
+                btnExtractSpecsEdit.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Extracting...';
+
+                try {
+                    const { extractSpecifications } = await import('../../services/aiService.js');
+                    const specs = await extractSpecifications(text);
+
+                    if (specs) {
+                        const mappings = {
+                            brand: 'edit-brand',
+                            model: 'edit-model',
+                            year: 'edit-year',
+                            mileage: 'edit-mileage',
+                            fuel: 'edit-fuel_type',
+                            transmission: 'edit-transmission',
+                            horsepower: 'edit-horsepower',
+                            color: 'edit-color',
+                            engine: 'edit-engine',
+                            price: 'edit-price'
+                        };
+
+                        let filledCount = 0;
+                        for (const [key, id] of Object.entries(mappings)) {
+                            if (specs[key] !== undefined && specs[key] !== null && specs[key] !== '') {
+                                const el = document.getElementById(id);
+                                if (el) {
+                                    if (el.tagName === 'SELECT') {
+                                        const val = String(specs[key]).toLowerCase();
+                                        const options = Array.from(el.options).map(o => o.value);
+                                        if (options.includes(val)) {
+                                            el.value = val;
+                                            el.dispatchEvent(new Event('change'));
+                                            filledCount++;
+                                        }
+                                    } else {
+                                        el.value = specs[key];
+                                        el.dispatchEvent(new Event('input'));
+                                        filledCount++;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (filledCount > 0) {
+                            showToast(`Successfully extracted ${filledCount} fields!`, 'success');
+                            textarea.value = ''; // clear it on success
+                        } else {
+                            showToast('No valid specifications found in the text.', 'warning');
+                        }
+                    } else {
+                        showToast('Failed to extract specifications.', 'danger');
+                    }
+                } catch (error) {
+                    console.error(error);
+                    showToast('Error extracting specifications.', 'danger');
+                } finally {
+                    btnExtractSpecsEdit.disabled = false;
+                    btnExtractSpecsEdit.innerHTML = originalText;
+                }
+            });
+        }
+
+        // AI Suggest Title logic
+        const btnSuggestTitleEdit = document.getElementById('btn-suggest-title-edit');
+        if (btnSuggestTitleEdit) {
+            btnSuggestTitleEdit.addEventListener('click', async () => {
+                const brand = document.getElementById('edit-brand').value.trim();
+                const model = document.getElementById('edit-model').value.trim();
+                const year = document.getElementById('edit-year').value.trim();
+                const mileage = document.getElementById('edit-mileage').value.trim();
+                const fuel = document.getElementById('edit-fuel_type').value;
+                const transmission = document.getElementById('edit-transmission').value;
+                const horsepower = document.getElementById('edit-horsepower').value.trim();
+
+                if (!brand || !model || !year) {
+                    showToast('Please fill in Brand, Model, and Year to suggest a title.', 'warning');
+                    return;
+                }
+
+                const originalText = btnSuggestTitleEdit.innerHTML;
+                btnSuggestTitleEdit.disabled = true;
+                btnSuggestTitleEdit.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>...';
+
+                try {
+                    const { generateTitle } = await import('../../services/aiService.js');
+                    const generatedTitle = await generateTitle({
+                        make: brand,
+                        model: model,
+                        year: year,
+                        fuel_type: fuel,
+                        horsepower: horsepower,
+                        transmission: transmission,
+                        mileage: mileage
+                    });
+
+                    if (generatedTitle && !generatedTitle.toLowerCase().includes('error') && !generatedTitle.toLowerCase().includes('unavailable')) {
+                        document.getElementById('edit-title').value = generatedTitle;
+                        document.getElementById('edit-title').dispatchEvent(new Event('input'));
+                        showToast('Title generated successfully!', 'success');
+                    } else {
+                        showToast(generatedTitle || 'Could not generate title.', 'danger');
+                    }
+                } catch (error) {
+                    console.error(error);
+                    showToast('Error generating title.', 'danger');
+                } finally {
+                    btnSuggestTitleEdit.disabled = false;
+                    btnSuggestTitleEdit.innerHTML = originalText;
+                }
+            });
+        }
 
         // AI Generate Description logic
         const btnGenerateDescription = document.getElementById('btn-generate-description');

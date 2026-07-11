@@ -32,6 +32,23 @@ export function renderCreatePage() {
     <div class="container" style="margin-top: -2.5rem; position: relative; z-index: 2; margin-bottom: 4rem; max-width: 900px;">
         <form id="create-listing-form" class="needs-validation" novalidate>
             
+            <!-- Section 0: Quick Fill -->
+            <div class="card-am-static p-4 p-md-5 mb-4 anim-slide-up" style="border-top: 4px solid var(--am-info); box-shadow: var(--am-shadow-md);">
+                <div class="section-header mb-4">
+                    <div class="section-icon" style="background: rgba(13, 202, 240, 0.1); color: var(--am-info);"><i class="bi bi-magic"></i></div>
+                    <div>
+                        <h3 style="font-size: 1.25rem; font-weight: 700;">AI Extract Specifications</h3>
+                        <span class="section-subtitle">Paste a car description to automatically extract specifications</span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <textarea class="form-control" id="create-extract-text" rows="3" placeholder="Paste car details here..."></textarea>
+                </div>
+                <button type="button" id="btn-extract-specs" class="btn btn-sm btn-am-info hover-glow" style="border-radius: var(--am-radius-full); padding: 0.4rem 1rem;">
+                    ⚡ Extract Specifications
+                </button>
+            </div>
+
             <!-- Section 1: Vehicle Info -->
             <div class="card-am-static p-4 p-md-5 mb-4 anim-slide-up delay-100" style="border-top: 4px solid var(--am-primary); box-shadow: var(--am-shadow-md);">
                 <div class="section-header mb-4">
@@ -43,7 +60,12 @@ export function renderCreatePage() {
                 </div>
                 <div class="row g-4">
                     <div class="col-md-12">
-                        <label for="create-title" class="form-label text-muted small fw-bold text-uppercase tracking-wide">Listing Title *</label>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label for="create-title" class="form-label text-muted small fw-bold text-uppercase tracking-wide mb-0">Listing Title *</label>
+                            <button type="button" id="btn-suggest-title" class="btn btn-sm btn-am-primary hover-glow" title="Suggest title with AI" style="border-radius: var(--am-radius-full); padding: 0.2rem 0.8rem;">
+                                💡 Suggest Title
+                            </button>
+                        </div>
                         <input type="text" class="form-control form-control-lg" id="create-title" placeholder="e.g. BMW X5 M Sport 2022" required />
                         <div class="invalid-feedback">Please enter a title.</div>
                     </div>
@@ -179,6 +201,81 @@ export function initCreatePage() {
 
     form.addEventListener('submit', handleCreateSubmit);
 
+    // AI Extract Specs logic
+    const btnExtractSpecs = document.getElementById('btn-extract-specs');
+    if (btnExtractSpecs) {
+        btnExtractSpecs.addEventListener('click', async () => {
+            const textarea = document.getElementById('create-extract-text');
+            const text = textarea.value.trim();
+            if (!text) {
+                showToast('Please paste a description first.', 'warning');
+                return;
+            }
+
+            const originalText = btnExtractSpecs.innerHTML;
+            btnExtractSpecs.disabled = true;
+            btnExtractSpecs.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Extracting...';
+
+            try {
+                const { extractSpecifications } = await import('../../services/aiService.js');
+                const specs = await extractSpecifications(text);
+
+                if (specs) {
+                    const mappings = {
+                        brand: 'create-brand',
+                        model: 'create-model',
+                        year: 'create-year',
+                        mileage: 'create-mileage',
+                        fuel: 'create-fuel_type',
+                        transmission: 'create-transmission',
+                        horsepower: 'create-horsepower',
+                        color: 'create-color',
+                        engine: 'create-engine',
+                        price: 'create-price'
+                    };
+
+                    let filledCount = 0;
+                    for (const [key, id] of Object.entries(mappings)) {
+                        if (specs[key] !== undefined && specs[key] !== null && specs[key] !== '') {
+                            const el = document.getElementById(id);
+                            if (el) {
+                                // specifically handle fuel and transmission which are selects
+                                if (el.tagName === 'SELECT') {
+                                    const val = String(specs[key]).toLowerCase();
+                                    const options = Array.from(el.options).map(o => o.value);
+                                    if (options.includes(val)) {
+                                        el.value = val;
+                                        el.dispatchEvent(new Event('change'));
+                                        filledCount++;
+                                    }
+                                } else {
+                                    el.value = specs[key];
+                                    el.dispatchEvent(new Event('input'));
+                                    filledCount++;
+                                }
+                            }
+                        }
+                    }
+
+                    if (filledCount > 0) {
+                        showToast(`Successfully extracted ${filledCount} fields!`, 'success');
+                        textarea.value = ''; // clear it on success
+                    } else {
+                        showToast('No valid specifications found in the text.', 'warning');
+                    }
+                } else {
+                    showToast('Failed to extract specifications.', 'danger');
+                }
+            } catch (error) {
+                console.error(error);
+                showToast('Error extracting specifications.', 'danger');
+            } finally {
+                btnExtractSpecs.disabled = false;
+                btnExtractSpecs.innerHTML = originalText;
+            }
+        });
+    }
+
     // Dropzone visual effects and drag-and-drop
     const dropzone = document.getElementById('image-dropzone');
     const imageInput = document.getElementById('create-images');
@@ -284,6 +381,56 @@ export function initCreatePage() {
         });
 
         imageInput.addEventListener('change', renderPreviews);
+    }
+
+    // AI Suggest Title logic
+    const btnSuggestTitle = document.getElementById('btn-suggest-title');
+    if (btnSuggestTitle) {
+        btnSuggestTitle.addEventListener('click', async () => {
+            const brand = document.getElementById('create-brand').value.trim();
+            const model = document.getElementById('create-model').value.trim();
+            const year = document.getElementById('create-year').value.trim();
+            const mileage = document.getElementById('create-mileage').value.trim();
+            const fuel = document.getElementById('create-fuel_type').value;
+            const transmission = document.getElementById('create-transmission').value;
+            const horsepower = document.getElementById('create-horsepower').value.trim();
+
+            if (!brand || !model || !year) {
+                showToast('Please fill in Brand, Model, and Year to suggest a title.', 'warning');
+                return;
+            }
+
+            const originalText = btnSuggestTitle.innerHTML;
+            btnSuggestTitle.disabled = true;
+            btnSuggestTitle.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>...';
+
+            try {
+                const { generateTitle } = await import('../../services/aiService.js');
+                const generatedTitle = await generateTitle({
+                    make: brand,
+                    model: model,
+                    year: year,
+                    fuel_type: fuel,
+                    horsepower: horsepower,
+                    transmission: transmission,
+                    mileage: mileage
+                });
+
+                if (generatedTitle && !generatedTitle.toLowerCase().includes('error') && !generatedTitle.toLowerCase().includes('unavailable')) {
+                    document.getElementById('create-title').value = generatedTitle;
+                    document.getElementById('create-title').dispatchEvent(new Event('input'));
+                    showToast('Title generated successfully!', 'success');
+                } else {
+                    showToast(generatedTitle || 'Could not generate title.', 'danger');
+                }
+            } catch (error) {
+                console.error(error);
+                showToast('Error generating title.', 'danger');
+            } finally {
+                btnSuggestTitle.disabled = false;
+                btnSuggestTitle.innerHTML = originalText;
+            }
+        });
     }
 
     // AI Generate Description logic

@@ -52,7 +52,7 @@ Color: ${carData.color || 'Unknown'}`;
             const urlObj = new URL(API_URL);
             urlObj.searchParams.set('key', API_KEY);
             fetchUrl = urlObj.toString();
-            
+
             fetchOptions = {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -85,7 +85,7 @@ Color: ${carData.color || 'Unknown'}`;
         }
 
         const data = await response.json();
-        
+
         if (isGeminiNative) {
             if (data && data.candidates && data.candidates.length > 0) {
                 return data.candidates[0].content.parts[0].text.trim();
@@ -95,7 +95,7 @@ Color: ${carData.color || 'Unknown'}`;
                 return data.choices[0].message.content.trim();
             }
         }
-        
+
         throw new Error('Invalid response format from AI service.');
     } catch (error) {
         console.error('Failed to generate description:', error);
@@ -139,7 +139,7 @@ ${existingDescription}`;
             const urlObj = new URL(API_URL);
             urlObj.searchParams.set('key', API_KEY);
             fetchUrl = urlObj.toString();
-            
+
             fetchOptions = {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -171,7 +171,7 @@ ${existingDescription}`;
         }
 
         const data = await response.json();
-        
+
         if (isGeminiNative) {
             if (data && data.candidates && data.candidates.length > 0) {
                 return data.candidates[0].content.parts[0].text.trim();
@@ -181,10 +181,218 @@ ${existingDescription}`;
                 return data.choices[0].message.content.trim();
             }
         }
-        
+
         throw new Error('Invalid response format from AI service.');
     } catch (error) {
         console.error('Failed to improve description:', error);
         return 'We encountered a network error while connecting to the AI service. Please check your connection and try again.';
+    }
+}
+
+/**
+ * Generates an attractive, short title for the car listing.
+ * @param {Object} carData - The details of the car.
+ * @returns {Promise<string>} The generated title in plain text.
+ */
+export async function generateTitle(carData) {
+    if (!API_KEY) {
+        return 'AI title unavailable';
+    }
+
+    const prompt = `You are an expert car copywriter.
+Generate a short, attractive, and professional title for this car listing.
+Requirements:
+- Maximum 70 characters
+- No clickbait
+- Professional tone
+- Bulgarian language
+- Return ONLY the title text, nothing else. No quotes, no markdown.
+
+Examples of good titles:
+- BMW 320d xDrive 2021 • 190 к.с.
+- Toyota Corolla Hybrid 2022
+- VW Golf 7 2.0 TDI DSG
+
+Vehicle Details:
+Brand: ${carData.make || 'Unknown'}
+Model: ${carData.model || 'Unknown'}
+Year: ${carData.year || 'Unknown'}
+Fuel Type: ${carData.fuel_type || 'Unknown'}
+Horsepower: ${carData.horsepower || 'Unknown'}
+Transmission: ${carData.transmission || 'Unknown'}
+Mileage: ${carData.mileage || 'Unknown'} km`;
+
+    try {
+        const isGeminiNative = API_URL.includes('generateContent');
+        let fetchUrl = API_URL;
+        let fetchOptions = {};
+
+        if (isGeminiNative) {
+            const urlObj = new URL(API_URL);
+            urlObj.searchParams.set('key', API_KEY);
+            fetchUrl = urlObj.toString();
+            
+            fetchOptions = {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }]
+                })
+            };
+        } else {
+            fetchOptions = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: import.meta.env.VITE_AI_MODEL || 'gpt-3.5-turbo',
+                    messages: [{ role: 'user', content: prompt }],
+                    temperature: 0.7,
+                    max_tokens: 50
+                })
+            };
+        }
+
+        const response = await fetch(fetchUrl, fetchOptions);
+
+        if (!response.ok) {
+            console.error('AI API Error:', response.status, await response.text());
+            return 'AI Error';
+        }
+
+        const data = await response.json();
+        
+        let title = '';
+        if (isGeminiNative) {
+            if (data && data.candidates && data.candidates.length > 0) {
+                title = data.candidates[0].content.parts[0].text.trim();
+            }
+        } else {
+            if (data && data.choices && data.choices.length > 0) {
+                title = data.choices[0].message.content.trim();
+            }
+        }
+        
+        if (title) {
+            // Remove surrounding quotes if the AI added them
+            if (title.startsWith('"') && title.endsWith('"')) {
+                title = title.substring(1, title.length - 1);
+            }
+            if (title.length > 70) {
+                title = title.substring(0, 70);
+            }
+            return title;
+        }
+
+        throw new Error('Invalid response format from AI service.');
+    } catch (error) {
+        console.error('Failed to generate title:', error);
+        return 'AI Network Error';
+    }
+}
+
+/**
+ * Extracts car specifications from free text.
+ * @param {string} text - The free text description.
+ * @returns {Promise<Object|null>} The extracted specifications as a JSON object, or null on error.
+ */
+export async function extractSpecifications(text) {
+    if (!API_KEY || !text || text.trim() === '') {
+        return null;
+    }
+
+    const prompt = `You are a data extraction assistant.
+Extract the following car specifications from the text provided below.
+Return ONLY a valid JSON object. Do not include markdown formatting like \`\`\`json.
+If a value is not found, omit the key or set it to null. Do not guess or invent values.
+Extract the exact values where possible (e.g. year as a number, horsepower as a number).
+
+Keys to extract:
+- brand (string)
+- model (string)
+- year (number)
+- mileage (number)
+- fuel (string: gasoline, diesel, electric, hybrid, lpg)
+- transmission (string: automatic, manual)
+- horsepower (number)
+- color (string)
+- engine (string)
+- price (number)
+
+Text:
+${text}`;
+
+    try {
+        const isGeminiNative = API_URL.includes('generateContent');
+        let fetchUrl = API_URL;
+        let fetchOptions = {};
+
+        if (isGeminiNative) {
+            const urlObj = new URL(API_URL);
+            urlObj.searchParams.set('key', API_KEY);
+            fetchUrl = urlObj.toString();
+            
+            fetchOptions = {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }]
+                })
+            };
+        } else {
+            fetchOptions = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: import.meta.env.VITE_AI_MODEL || 'gpt-3.5-turbo',
+                    messages: [{ role: 'user', content: prompt }],
+                    temperature: 0.1,
+                    max_tokens: 500
+                })
+            };
+        }
+
+        const response = await fetch(fetchUrl, fetchOptions);
+
+        if (!response.ok) {
+            console.error('AI API Error:', response.status, await response.text());
+            return null;
+        }
+
+        const data = await response.json();
+        
+        let resultText = '';
+        if (isGeminiNative) {
+            if (data && data.candidates && data.candidates.length > 0) {
+                resultText = data.candidates[0].content.parts[0].text.trim();
+            }
+        } else {
+            if (data && data.choices && data.choices.length > 0) {
+                resultText = data.choices[0].message.content.trim();
+            }
+        }
+        
+        if (resultText) {
+            // Clean up any markdown json blocks if the AI ignored the instruction
+            resultText = resultText.replace(/```json/g, '').replace(/```/g, '').trim();
+            
+            try {
+                const parsed = JSON.parse(resultText);
+                return parsed;
+            } catch (parseError) {
+                console.error('Failed to parse JSON from AI response:', resultText);
+                return null;
+            }
+        }
+
+        return null;
+    } catch (error) {
+        console.error('Failed to extract specifications:', error);
+        return null;
     }
 }
