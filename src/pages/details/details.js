@@ -203,6 +203,18 @@ export async function initDetailsPage(params = {}) {
                             <h3 style="font-size: 1.2rem;">Description</h3>
                         </div>
                         <p style="color: var(--am-dark-600); line-height: 1.8; white-space: pre-wrap;">${listing.description || 'No description provided.'}</p>
+                        
+                        ${listing.search_keywords ? `
+                        <div class="mt-4 pt-3" style="border-top: 1px dashed #e2e8f0;">
+                            <div class="d-flex flex-wrap gap-2">
+                                ${listing.search_keywords.split(',').map(kw => `
+                                    <span class="badge rounded-pill" style="background: var(--am-primary-100); color: var(--am-primary); font-weight: 500; font-size: 0.85rem; padding: 0.4rem 0.8rem; border: 1px solid var(--am-primary-200);">
+                                        #${kw.trim().replace(/\s+/g, '').toLowerCase()}
+                                    </span>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
                     </div>
                 </div>
 

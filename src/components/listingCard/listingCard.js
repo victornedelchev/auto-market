@@ -17,6 +17,7 @@ export function renderListingCard(listing = {}) {
         year = new Date().getFullYear(),
         fuel = 'N/A',
         mileage = 0,
+        search_keywords = ''
     } = listing;
 
     return `
@@ -51,6 +52,14 @@ export function renderListingCard(listing = {}) {
                     <span class="listing-badge"><i class="bi bi-fuel-pump"></i>${fuel}</span>
                     <span class="listing-badge"><i class="bi bi-speedometer2"></i>${mileage.toLocaleString()} km</span>
                 </div>
+                ${search_keywords ? `
+                <div class="d-flex flex-wrap gap-1 mb-3">
+                    ${search_keywords.split(',').slice(0, 3).map(kw => `
+                        <span style="font-size: 0.75rem; color: var(--am-primary); background: var(--am-primary-50); padding: 2px 8px; border-radius: 12px;">#${kw.trim().replace(/\s+/g, '').toLowerCase()}</span>
+                    `).join('')}
+                    ${search_keywords.split(',').length > 3 ? `<span style="font-size: 0.75rem; color: var(--am-gray); padding: 2px 4px;">+${search_keywords.split(',').length - 3}</span>` : ''}
+                </div>
+                ` : ''}
                 <div class="mt-auto">
                     <a href="#/details/${id}" class="btn btn-am-outline btn-sm w-100">
                         View Details <i class="bi bi-arrow-right ms-1"></i>
