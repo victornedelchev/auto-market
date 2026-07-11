@@ -311,6 +311,9 @@ export function initCreatePage() {
             const btnImproveDescription = document.getElementById('btn-improve-description');
             if (btnImproveDescription) btnImproveDescription.disabled = true;
 
+            const existingAlert = document.getElementById('ai-alert-generate');
+            if (existingAlert) existingAlert.remove();
+
             try {
                 const { generateDescription } = await import('../../services/aiService.js');
                 const generatedText = await generateDescription({
@@ -329,7 +332,8 @@ export function initCreatePage() {
                 showToast('Description generated successfully.', 'success');
             } catch (err) {
                 console.error(err);
-                showToast('Failed to generate description.', 'danger');
+                const alertHtml = `<div id="ai-alert-generate" class="alert alert-danger mt-3 mb-3" role="alert"><i class="bi bi-exclamation-triangle-fill me-2"></i> Failed to generate description.</div>`;
+                document.getElementById('create-description').insertAdjacentHTML('beforebegin', alertHtml);
             } finally {
                 btnGenerateDescription.disabled = false;
                 btnGenerateDescription.innerHTML = '🤖 Generate Description';
@@ -354,6 +358,9 @@ export function initCreatePage() {
             const btnGenerateDescription = document.getElementById('btn-generate-description');
             if (btnGenerateDescription) btnGenerateDescription.disabled = true;
 
+            const existingAlert = document.getElementById('ai-alert-improve');
+            if (existingAlert) existingAlert.remove();
+
             try {
                 const { improveDescription } = await import('../../services/aiService.js');
                 const improvedText = await improveDescription(currentDesc);
@@ -361,7 +368,8 @@ export function initCreatePage() {
                 showToast('Description generated successfully.', 'success');
             } catch (err) {
                 console.error(err);
-                showToast('Failed to improve description.', 'danger');
+                const alertHtml = `<div id="ai-alert-improve" class="alert alert-danger mt-3 mb-3" role="alert"><i class="bi bi-exclamation-triangle-fill me-2"></i> Failed to improve description.</div>`;
+                document.getElementById('create-description').insertAdjacentHTML('beforebegin', alertHtml);
             } finally {
                 btnImproveDescription.disabled = false;
                 btnImproveDescription.innerHTML = '✨ Improve Description';
