@@ -6,6 +6,7 @@
 import { getUser, getUserProfile, isAdminUser } from '../../utils/authState.js';
 import { logout } from '../../services/authService.js';
 import { navigateTo } from '../../utils/router.js';
+import { getTheme, toggleTheme } from '../../utils/themeService.js';
 
 /**
  * Render the navbar HTML.
@@ -81,7 +82,12 @@ export function renderNavbar() {
                 <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-1">
                     ${visibleLinks.map(buildLink).join('')}
                 </ul>
-                ${authSection}
+                <div class="d-flex align-items-center gap-3">
+                    <button id="theme-toggle-btn" class="btn btn-link p-0 text-white" style="opacity: 0.8; font-size: 1.25rem; transition: opacity 0.2s;" title="Toggle Theme">
+                        <i id="theme-toggle-icon" class="bi ${getTheme() === 'dark' ? 'bi-moon-stars-fill' : 'bi-sun-fill'}"></i>
+                    </button>
+                    ${authSection}
+                </div>
             </div>
         </div>
     </nav>
@@ -170,9 +176,20 @@ function renderUserMenu(user) {
  */
 export function initNavbar() {
     const logoutBtn = document.getElementById('logout-btn');
-    if (!logoutBtn) return;
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', handleLogout);
+    }
 
-    logoutBtn.addEventListener('click', handleLogout);
+    const themeBtn = document.getElementById('theme-toggle-btn');
+    if (themeBtn) {
+        themeBtn.addEventListener('click', () => {
+            const newTheme = toggleTheme();
+            const icon = document.getElementById('theme-toggle-icon');
+            if (icon) {
+                icon.className = newTheme === 'dark' ? 'bi bi-moon-stars-fill' : 'bi bi-sun-fill';
+            }
+        });
+    }
 }
 
 /**

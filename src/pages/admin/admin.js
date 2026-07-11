@@ -18,7 +18,7 @@ export function renderAdminPage() {
     return `
     <style>
         .admin-portal {
-            background: #f8fafc;
+            background: var(--am-light);
             min-height: calc(100vh - 73px);
             padding-bottom: 4rem;
         }
@@ -54,7 +54,7 @@ export function renderAdminPage() {
             border-radius: 50%;
         }
         .admin-tabs-container {
-            background: rgba(255, 255, 255, 0.8);
+            background: var(--am-white);
             backdrop-filter: blur(12px);
             border-radius: 1rem;
             padding: 0.5rem;
@@ -71,7 +71,7 @@ export function renderAdminPage() {
             padding: 0.75rem 1.5rem;
             border-radius: 0.75rem;
             font-weight: 600;
-            color: #64748b;
+            color: var(--am-gray);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             background: transparent;
             border: none;
@@ -80,22 +80,22 @@ export function renderAdminPage() {
             gap: 0.5rem;
         }
         .admin-tab:hover {
-            color: #0f172a;
-            background: rgba(241, 245, 249, 0.5);
+            color: var(--am-dark);
+            background: var(--am-primary-50);
         }
         .admin-tab.active {
-            background: white;
-            color: #0f172a;
+            background: var(--am-white);
+            color: var(--am-dark);
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.02);
         }
         .admin-tab.active i {
             color: var(--am-primary);
         }
         .admin-stats-card {
-            background: white;
+            background: var(--am-white);
             border-radius: 1rem;
             padding: 1.5rem;
-            border: 1px solid rgba(226, 232, 240, 0.8);
+            border: 1px solid var(--am-gray-light);
             box-shadow: 0 10px 15px -3px rgba(0,0,0,0.02);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             height: 100%;
@@ -117,20 +117,20 @@ export function renderAdminPage() {
         .admin-stats-value {
             font-size: 2.5rem;
             font-weight: 800;
-            color: #0f172a;
+            color: var(--am-dark);
             line-height: 1;
             margin-bottom: 0.25rem;
             font-family: var(--am-font-display);
         }
         .admin-stats-label {
-            color: #64748b;
+            color: var(--am-gray);
             font-weight: 500;
             font-size: 0.9rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
         .admin-table-container {
-            background: white;
+            background: var(--am-white);
             border-radius: 1rem;
             box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 0 0 1px rgba(0,0,0,0.02);
         }
@@ -139,30 +139,30 @@ export function renderAdminPage() {
             padding-bottom: 5rem; /* Add padding to prevent dropdown clipping */
             margin-bottom: -5rem;
         }
-        .admin-table th {
-            background: #f8fafc;
-            color: #475569;
+        .table.admin-table th {
+            background: var(--am-primary-50);
+            color: var(--am-dark-600);
             font-weight: 600;
             text-transform: uppercase;
             font-size: 0.75rem;
             letter-spacing: 0.05em;
             padding: 1rem 1.5rem;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid var(--am-gray-light);
         }
-        .admin-table td {
+        .table.admin-table td {
             padding: 1rem 1.5rem;
             vertical-align: middle;
-            color: #334155;
-            border-bottom: 1px solid #f1f5f9;
+            color: var(--am-dark-700);
+            border-bottom: 1px solid var(--am-primary-50);
         }
-        .admin-table tr:last-child td {
+        .table.admin-table tr:last-child td {
             border-bottom: none;
         }
-        .admin-table tbody tr {
+        .table.admin-table tbody tr {
             transition: background 0.2s;
         }
-        .admin-table tbody tr:hover {
-            background: #f8fafc;
+        .table.admin-table tbody tr:hover {
+            background: var(--am-primary-50);
         }
         .badge-you-premium {
             background: var(--am-gradient-primary);

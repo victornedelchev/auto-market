@@ -10,6 +10,7 @@ import { addRoute, setNotFound, initRouter } from './utils/router.js';
 // Import auth utilities
 import { initAuth, onAuthChange } from './utils/authState.js';
 import { requireAuth, requireGuest, requireAdmin } from './utils/guards.js';
+import { initTheme } from './utils/themeService.js';
 
 // Import layout components
 import { renderNavbar, initNavbar } from './components/navbar/navbar.js';
@@ -102,6 +103,9 @@ window.addEventListener('hashchange', updateNavbar);
 // ── Initialize ──────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // Initialize theme first so it applies before render
+    initTheme();
+
     // Restore session before rendering anything
     await initAuth();
 
