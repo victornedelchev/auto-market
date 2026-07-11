@@ -976,3 +976,11 @@ input[type="file"]::file-selector-button:active {
     color: var(--am-gray);
     opacity: 0.5;
 }
+
+/* Breadcrumbs */
+[data-theme="dark"] .breadcrumb-item.active {
+    color: var(--am-dark-800) !important;
+}
+[data-theme="dark"] .breadcrumb-item + .breadcrumb-item::before {
+    color: var(--am-gray) !important;
+}

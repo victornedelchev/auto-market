@@ -6,7 +6,7 @@
 import { getUser, getUserProfile, isAdminUser } from '../../utils/authState.js';
 import { logout } from '../../services/authService.js';
 import { navigateTo } from '../../utils/router.js';
-import { getTheme, toggleTheme } from '../../utils/themeService.js';
+import { getTheme, setTheme } from '../../utils/themeService.js';
 
 /**
  * Render the navbar HTML.
@@ -83,9 +83,16 @@ export function renderNavbar() {
                     ${visibleLinks.map(buildLink).join('')}
                 </ul>
                 <div class="d-flex align-items-center gap-3">
-                    <button id="theme-toggle-btn" class="btn btn-link p-0 text-white" style="opacity: 0.8; font-size: 1.25rem; transition: opacity 0.2s;" title="Toggle Theme">
-                        <i id="theme-toggle-icon" class="bi ${getTheme() === 'dark' ? 'bi-moon-stars-fill' : 'bi-sun-fill'}"></i>
-                    </button>
+                    <div class="dropdown">
+                        <button class="btn btn-link p-0 text-white dropdown-toggle hide-arrow" id="theme-toggle-btn" data-bs-toggle="dropdown" style="opacity: 0.8; font-size: 1.25rem; transition: opacity 0.2s;" title="Theme Settings">
+                            <i id="theme-toggle-icon" class="bi bi-circle-half"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" style="min-width: 140px; border-radius: 0.75rem;">
+                            <li><button class="dropdown-item d-flex align-items-center theme-select-btn" data-theme-val="light"><i class="bi bi-sun me-2 text-warning"></i> Light</button></li>
+                            <li><button class="dropdown-item d-flex align-items-center theme-select-btn" data-theme-val="dark"><i class="bi bi-moon-stars me-2 text-primary"></i> Dark</button></li>
+                            <li><button class="dropdown-item d-flex align-items-center theme-select-btn" data-theme-val="auto"><i class="bi bi-circle-half me-2 text-secondary"></i> Auto</button></li>
+                        </ul>
+                    </div>
                     ${authSection}
                 </div>
             </div>
@@ -108,6 +115,9 @@ export function renderNavbar() {
         .navbar .nav-link.active {
             color: #fff !important;
             background: rgba(37, 99, 235, 0.25);
+        }
+        .hide-arrow::after {
+            display: none !important;
         }
     </style>`;
 }
@@ -180,16 +190,56 @@ export function initNavbar() {
         logoutBtn.addEventListener('click', handleLogout);
     }
 
-    const themeBtn = document.getElementById('theme-toggle-btn');
-    if (themeBtn) {
-        themeBtn.addEventListener('click', () => {
-            const newTheme = toggleTheme();
-            const icon = document.getElementById('theme-toggle-icon');
-            if (icon) {
-                icon.className = newTheme === 'dark' ? 'bi bi-moon-stars-fill' : 'bi bi-sun-fill';
-            }
+    const themeToggleBtn = document.getElementById('theme-toggle-btn');
+    if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            import('bootstrap').then(({ Dropdown }) => {
+                const dropdown = Dropdown.getOrCreateInstance(themeToggleBtn);
+                dropdown.toggle();
+            });
         });
     }
+
+    const themeButtons = document.querySelectorAll('.theme-select-btn');
+    themeButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const val = e.currentTarget.getAttribute('data-theme-val');
+            setTheme(val);
+        });
+    });
+
+    updateThemeIcon();
+    
+    // Listen for cross-component theme changes
+    window.addEventListener('am-theme-changed', updateThemeIcon);
+}
+
+function updateThemeIcon() {
+    const icon = document.getElementById('theme-toggle-icon');
+    if (!icon) return;
+    
+    const theme = getTheme();
+    if (theme === 'light') icon.className = 'bi bi-sun-fill';
+    else if (theme === 'dark') icon.className = 'bi bi-moon-stars-fill';
+    else icon.className = 'bi bi-circle-half';
+
+    // Highlight active item in dropdown
+    document.querySelectorAll('.theme-select-btn').forEach(btn => {
+        if (btn.getAttribute('data-theme-val') === theme) {
+            btn.classList.add('active', 'bg-primary', 'text-white');
+            btn.querySelector('i').classList.replace('text-warning', 'text-white');
+            btn.querySelector('i').classList.replace('text-primary', 'text-white');
+            btn.querySelector('i').classList.replace('text-secondary', 'text-white');
+        } else {
+            btn.classList.remove('active', 'bg-primary', 'text-white');
+            // reset icon colors (brute force approach for simplicity)
+            const i = btn.querySelector('i');
+            if (btn.getAttribute('data-theme-val') === 'light') i.className = 'bi bi-sun me-2 text-warning';
+            if (btn.getAttribute('data-theme-val') === 'dark') i.className = 'bi bi-moon-stars me-2 text-primary';
+            if (btn.getAttribute('data-theme-val') === 'auto') i.className = 'bi bi-circle-half me-2 text-secondary';
+        }
+    });
 }
 
 /**
