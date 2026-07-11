@@ -277,7 +277,9 @@ export async function initEditPage(params) {
         const imageInput = document.getElementById('edit-images');
         const previewContainer = document.getElementById('edit-images-preview');
         
-        if (dropzone && imageInput) {
+        if (dropzone && imageInput && previewContainer) {
+            let accumulatedFiles = new DataTransfer();
+
             const highlight = () => {
                 dropzone.style.borderColor = 'var(--am-primary-200)';
                 dropzone.style.background = 'var(--am-primary-50)';
@@ -289,33 +291,20 @@ export async function initEditPage(params) {
 
             dropzone.addEventListener('mouseover', highlight);
             dropzone.addEventListener('mouseout', unhighlight);
-
-            dropzone.addEventListener('dragenter', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                highlight();
-            });
-
-            dropzone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                highlight();
-            });
-
-            dropzone.addEventListener('dragleave', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                unhighlight();
-            });
+            dropzone.addEventListener('dragenter', (e) => { e.preventDefault(); e.stopPropagation(); highlight(); });
+            dropzone.addEventListener('dragover', (e) => { e.preventDefault(); e.stopPropagation(); highlight(); });
+            dropzone.addEventListener('dragleave', (e) => { e.preventDefault(); e.stopPropagation(); unhighlight(); });
 
             dropzone.addEventListener('drop', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 unhighlight();
-                
                 if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                    imageInput.files = e.dataTransfer.files;
-                    imageInput.dispatchEvent(new Event('change'));
+                    for (let file of e.dataTransfer.files) {
+                        accumulatedFiles.items.add(file);
+                    }
+                    imageInput.files = accumulatedFiles.files;
+                    renderPreviews();
                 }
             });
 
@@ -324,53 +313,61 @@ export async function initEditPage(params) {
                     imageInput.click();
                 }
             });
-        }
 
-        const renderPreviews = () => {
-            previewContainer.innerHTML = '';
-            const files = Array.from(imageInput.files);
-            
-            const validationError = validateImageFiles(files, currentImageCount);
-            if (validationError) {
-                showToast(validationError, 'danger');
-                imageInput.value = ''; // clear input
-                return;
-            }
-
-            files.forEach((file, index) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const div = document.createElement('div');
-                    div.style.cssText = 'width: 100px; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; position: relative;';
-                    div.innerHTML = `
-                        <img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover;" alt="Preview" />
-                        <button type="button" class="position-absolute top-0 end-0 m-1 btn-remove-image remove-preview-btn" aria-label="Remove image" data-index="${index}"><i class="bi bi-x"></i></button>
-                    `;
-                    previewContainer.appendChild(div);
-                };
-                reader.readAsDataURL(file);
+            imageInput.addEventListener('change', (e) => {
+                if (e.isTrusted && imageInput.files.length > 0) {
+                    for (let file of imageInput.files) {
+                        accumulatedFiles.items.add(file);
+                    }
+                    imageInput.files = accumulatedFiles.files;
+                }
+                renderPreviews();
             });
-        };
 
-        previewContainer.addEventListener('click', (e) => {
-            const btn = e.target.closest('.remove-preview-btn');
-            if (btn) {
-                const indexToRemove = parseInt(btn.getAttribute('data-index'), 10);
-                const dt = new DataTransfer();
+            const renderPreviews = () => {
+                previewContainer.innerHTML = '';
                 const files = Array.from(imageInput.files);
                 
-                for (let i = 0; i < files.length; i++) {
-                    if (i !== indexToRemove) {
-                        dt.items.add(files[i]);
-                    }
+                const validationError = validateImageFiles(files, currentImageCount);
+                if (validationError) {
+                    showToast(validationError, 'danger');
+                    return;
                 }
-                
-                imageInput.files = dt.files;
-                renderPreviews();
-            }
-        });
 
-        imageInput.addEventListener('change', renderPreviews);
+                files.forEach((file, index) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const div = document.createElement('div');
+                        div.style.cssText = 'width: 100px; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; position: relative;';
+                        div.innerHTML = `
+                            <img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover;" alt="Preview" />
+                            <button type="button" class="position-absolute top-0 end-0 m-1 btn-remove-image remove-preview-btn" aria-label="Remove image" data-index="${index}"><i class="bi bi-x"></i></button>
+                        `;
+                        previewContainer.appendChild(div);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            };
+
+            previewContainer.addEventListener('click', (e) => {
+                const btn = e.target.closest('.remove-preview-btn');
+                if (btn) {
+                    const indexToRemove = parseInt(btn.getAttribute('data-index'), 10);
+                    const dt = new DataTransfer();
+                    const files = Array.from(accumulatedFiles.files);
+                    
+                    for (let i = 0; i < files.length; i++) {
+                        if (i !== indexToRemove) {
+                            dt.items.add(files[i]);
+                        }
+                    }
+                    
+                    accumulatedFiles = dt;
+                    imageInput.files = accumulatedFiles.files;
+                    renderPreviews();
+                }
+            });
+        }
 
         // AI Extract Specs logic
         const btnExtractSpecsEdit = document.getElementById('btn-extract-specs-edit');

@@ -279,7 +279,11 @@ export function initCreatePage() {
     // Dropzone visual effects and drag-and-drop
     const dropzone = document.getElementById('image-dropzone');
     const imageInput = document.getElementById('create-images');
-    if (dropzone && imageInput) {
+    const previewContainer = document.getElementById('images-preview');
+
+    if (dropzone && imageInput && previewContainer) {
+        let accumulatedFiles = new DataTransfer();
+
         const highlight = () => {
             dropzone.style.borderColor = 'var(--am-primary-200)';
             dropzone.style.background = 'var(--am-primary-50)';
@@ -291,33 +295,20 @@ export function initCreatePage() {
 
         dropzone.addEventListener('mouseover', highlight);
         dropzone.addEventListener('mouseout', unhighlight);
-
-        dropzone.addEventListener('dragenter', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            highlight();
-        });
-
-        dropzone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            highlight();
-        });
-
-        dropzone.addEventListener('dragleave', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            unhighlight();
-        });
+        dropzone.addEventListener('dragenter', (e) => { e.preventDefault(); e.stopPropagation(); highlight(); });
+        dropzone.addEventListener('dragover', (e) => { e.preventDefault(); e.stopPropagation(); highlight(); });
+        dropzone.addEventListener('dragleave', (e) => { e.preventDefault(); e.stopPropagation(); unhighlight(); });
 
         dropzone.addEventListener('drop', (e) => {
             e.preventDefault();
             e.stopPropagation();
             unhighlight();
-            
             if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                imageInput.files = e.dataTransfer.files;
-                imageInput.dispatchEvent(new Event('change'));
+                for (let file of e.dataTransfer.files) {
+                    accumulatedFiles.items.add(file);
+                }
+                imageInput.files = accumulatedFiles.files;
+                renderPreviews();
             }
         });
 
@@ -326,12 +317,17 @@ export function initCreatePage() {
                 imageInput.click();
             }
         });
-    }
 
-    // Basic image preview and validation
-    const previewContainer = document.getElementById('images-preview');
-    if (imageInput && previewContainer) {
-        
+        imageInput.addEventListener('change', (e) => {
+            if (e.isTrusted && imageInput.files.length > 0) {
+                for (let file of imageInput.files) {
+                    accumulatedFiles.items.add(file);
+                }
+                imageInput.files = accumulatedFiles.files;
+            }
+            renderPreviews();
+        });
+
         const renderPreviews = () => {
             previewContainer.innerHTML = '';
             const files = Array.from(imageInput.files);
@@ -339,7 +335,6 @@ export function initCreatePage() {
             const validationError = validateImageFiles(files, 0);
             if (validationError) {
                 showToast(validationError, 'danger');
-                imageInput.value = ''; // clear input
                 return;
             }
 
@@ -367,7 +362,7 @@ export function initCreatePage() {
             if (btn) {
                 const indexToRemove = parseInt(btn.getAttribute('data-index'), 10);
                 const dt = new DataTransfer();
-                const files = Array.from(imageInput.files);
+                const files = Array.from(accumulatedFiles.files);
                 
                 for (let i = 0; i < files.length; i++) {
                     if (i !== indexToRemove) {
@@ -375,12 +370,11 @@ export function initCreatePage() {
                     }
                 }
                 
-                imageInput.files = dt.files;
+                accumulatedFiles = dt;
+                imageInput.files = accumulatedFiles.files;
                 renderPreviews();
             }
         });
-
-        imageInput.addEventListener('change', renderPreviews);
     }
 
     // AI Suggest Title logic
