@@ -122,7 +122,7 @@ export function renderCreatePage() {
                         </div>
                     </div>
                     <div class="d-flex gap-2">
-                        <button type="button" id="btn-improve-description" class="btn btn-sm btn-am-accent hover-glow" title="Improve current description with AI" style="border-radius: var(--am-radius-full); padding: 0.4rem 1rem;">
+                        <button type="button" id="btn-improve-description" class="btn btn-sm btn-am-info hover-glow" title="Improve current description with AI" style="border-radius: var(--am-radius-full); padding: 0.4rem 1rem;">
                             ✨ Improve Description
                         </button>
                         <button type="button" id="btn-generate-description" class="btn btn-sm btn-am-primary hover-glow" title="Generate description with AI" style="border-radius: var(--am-radius-full); padding: 0.4rem 1rem;">
@@ -179,24 +179,63 @@ export function initCreatePage() {
 
     form.addEventListener('submit', handleCreateSubmit);
 
-    // Dropzone visual effects
+    // Dropzone visual effects and drag-and-drop
     const dropzone = document.getElementById('image-dropzone');
-    if (dropzone) {
-        dropzone.addEventListener('mouseover', () => {
+    const imageInput = document.getElementById('create-images');
+    if (dropzone && imageInput) {
+        const highlight = () => {
             dropzone.style.borderColor = 'var(--am-primary-200)';
             dropzone.style.background = 'var(--am-primary-50)';
-        });
-        dropzone.addEventListener('mouseout', () => {
+        };
+        const unhighlight = () => {
             dropzone.style.borderColor = '#e2e8f0';
             dropzone.style.background = 'transparent';
+        };
+
+        dropzone.addEventListener('mouseover', highlight);
+        dropzone.addEventListener('mouseout', unhighlight);
+
+        dropzone.addEventListener('dragenter', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            highlight();
+        });
+
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            highlight();
+        });
+
+        dropzone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            unhighlight();
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            unhighlight();
+            
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                imageInput.files = e.dataTransfer.files;
+                imageInput.dispatchEvent(new Event('change'));
+            }
+        });
+
+        dropzone.addEventListener('click', (e) => {
+            if (e.target !== imageInput) {
+                imageInput.click();
+            }
         });
     }
 
     // Basic image preview and validation
-    const imageInput = document.getElementById('create-images');
     const previewContainer = document.getElementById('images-preview');
     if (imageInput && previewContainer) {
-        imageInput.addEventListener('change', () => {
+        
+        const renderPreviews = () => {
             previewContainer.innerHTML = '';
             const files = Array.from(imageInput.files);
             
@@ -211,15 +250,40 @@ export function initCreatePage() {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const isCover = index === 0;
-                    previewContainer.innerHTML += `
-                        <div style="width: 100px; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid ${isCover ? 'var(--am-primary)' : '#e2e8f0'}; position: relative;">
-                            ${isCover ? '<div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(37,99,235,0.9); color: white; font-size: 0.6rem; text-align: center; padding: 2px;">COVER</div>' : ''}
-                            <img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover;" alt="Preview" />
-                        </div>`;
+                    const div = document.createElement('div');
+                    div.style.cssText = `width: 100px; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid ${isCover ? 'var(--am-primary)' : '#e2e8f0'}; position: relative;`;
+                    
+                    div.innerHTML = `
+                        ${isCover ? '<div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(37,99,235,0.9); color: white; font-size: 0.6rem; text-align: center; padding: 2px;">COVER</div>' : ''}
+                        <img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover;" alt="Preview" />
+                        <button type="button" class="position-absolute top-0 end-0 m-1 btn-remove-image remove-preview-btn" aria-label="Remove image" data-index="${index}"><i class="bi bi-x"></i></button>
+                    `;
+                    
+                    previewContainer.appendChild(div);
                 };
                 reader.readAsDataURL(file);
             });
+        };
+
+        previewContainer.addEventListener('click', (e) => {
+            const btn = e.target.closest('.remove-preview-btn');
+            if (btn) {
+                const indexToRemove = parseInt(btn.getAttribute('data-index'), 10);
+                const dt = new DataTransfer();
+                const files = Array.from(imageInput.files);
+                
+                for (let i = 0; i < files.length; i++) {
+                    if (i !== indexToRemove) {
+                        dt.items.add(files[i]);
+                    }
+                }
+                
+                imageInput.files = dt.files;
+                renderPreviews();
+            }
         });
+
+        imageInput.addEventListener('change', renderPreviews);
     }
 
     // AI Generate Description logic
@@ -243,7 +307,9 @@ export function initCreatePage() {
             }
 
             btnGenerateDescription.disabled = true;
-            btnGenerateDescription.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Generating...';
+            btnGenerateDescription.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Generating description...';
+            const btnImproveDescription = document.getElementById('btn-improve-description');
+            if (btnImproveDescription) btnImproveDescription.disabled = true;
 
             try {
                 const { generateDescription } = await import('../../services/aiService.js');
@@ -260,13 +326,14 @@ export function initCreatePage() {
                 });
 
                 document.getElementById('create-description').value = generatedText;
-                showToast('Description generated successfully!', 'success');
+                showToast('Description generated successfully.', 'success');
             } catch (err) {
                 console.error(err);
                 showToast('Failed to generate description.', 'danger');
             } finally {
                 btnGenerateDescription.disabled = false;
                 btnGenerateDescription.innerHTML = '🤖 Generate Description';
+                if (btnImproveDescription) btnImproveDescription.disabled = false;
             }
         });
     }
@@ -283,19 +350,22 @@ export function initCreatePage() {
             }
 
             btnImproveDescription.disabled = true;
-            btnImproveDescription.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Improving...';
+            btnImproveDescription.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Generating description...';
+            const btnGenerateDescription = document.getElementById('btn-generate-description');
+            if (btnGenerateDescription) btnGenerateDescription.disabled = true;
 
             try {
                 const { improveDescription } = await import('../../services/aiService.js');
                 const improvedText = await improveDescription(currentDesc);
                 descriptionArea.value = improvedText;
-                showToast('Description improved successfully!', 'success');
+                showToast('Description generated successfully.', 'success');
             } catch (err) {
                 console.error(err);
                 showToast('Failed to improve description.', 'danger');
             } finally {
                 btnImproveDescription.disabled = false;
                 btnImproveDescription.innerHTML = '✨ Improve Description';
+                if (btnGenerateDescription) btnGenerateDescription.disabled = false;
             }
         });
     }

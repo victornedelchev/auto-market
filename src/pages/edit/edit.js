@@ -136,7 +136,7 @@ export function renderEditPage(params = {}) {
                             </div>
                         </div>
                         <div class="d-flex gap-2">
-                            <button type="button" id="btn-improve-description" class="btn btn-sm btn-am-accent hover-glow" title="Improve current description with AI" style="border-radius: var(--am-radius-full); padding: 0.4rem 1rem;">
+                            <button type="button" id="btn-improve-description" class="btn btn-sm btn-am-info hover-glow" title="Improve current description with AI" style="border-radius: var(--am-radius-full); padding: 0.4rem 1rem;">
                                 ✨ Improve Description
                             </button>
                             <button type="button" id="btn-generate-description" class="btn btn-sm btn-am-primary hover-glow" title="Generate description with AI" style="border-radius: var(--am-radius-full); padding: 0.4rem 1rem;">
@@ -250,21 +250,61 @@ export async function initEditPage(params) {
         form.addEventListener('submit', (e) => handleEditSubmit(e, id));
         document.getElementById('btn-delete-listing').addEventListener('click', () => handleDeleteListing(id));
 
-        // Image dropzone UX
+        // Image dropzone UX and drag-and-drop
         const dropzone = document.getElementById('edit-image-dropzone');
         const imageInput = document.getElementById('edit-images');
         const previewContainer = document.getElementById('edit-images-preview');
         
-        dropzone.addEventListener('mouseover', () => {
-            dropzone.style.borderColor = 'var(--am-primary-200)';
-            dropzone.style.background = 'var(--am-primary-50)';
-        });
-        dropzone.addEventListener('mouseout', () => {
-            dropzone.style.borderColor = '#e2e8f0';
-            dropzone.style.background = 'transparent';
-        });
+        if (dropzone && imageInput) {
+            const highlight = () => {
+                dropzone.style.borderColor = 'var(--am-primary-200)';
+                dropzone.style.background = 'var(--am-primary-50)';
+            };
+            const unhighlight = () => {
+                dropzone.style.borderColor = '#e2e8f0';
+                dropzone.style.background = 'transparent';
+            };
 
-        imageInput.addEventListener('change', () => {
+            dropzone.addEventListener('mouseover', highlight);
+            dropzone.addEventListener('mouseout', unhighlight);
+
+            dropzone.addEventListener('dragenter', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                highlight();
+            });
+
+            dropzone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                highlight();
+            });
+
+            dropzone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                unhighlight();
+            });
+
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                unhighlight();
+                
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    imageInput.files = e.dataTransfer.files;
+                    imageInput.dispatchEvent(new Event('change'));
+                }
+            });
+
+            dropzone.addEventListener('click', (e) => {
+                if (e.target !== imageInput) {
+                    imageInput.click();
+                }
+            });
+        }
+
+        const renderPreviews = () => {
             previewContainer.innerHTML = '';
             const files = Array.from(imageInput.files);
             
@@ -275,17 +315,40 @@ export async function initEditPage(params) {
                 return;
             }
 
-            files.forEach(file => {
+            files.forEach((file, index) => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    previewContainer.innerHTML += `
-                        <div style="width: 100px; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;">
-                            <img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover;" alt="Preview" />
-                        </div>`;
+                    const div = document.createElement('div');
+                    div.style.cssText = 'width: 100px; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; position: relative;';
+                    div.innerHTML = `
+                        <img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover;" alt="Preview" />
+                        <button type="button" class="position-absolute top-0 end-0 m-1 btn-remove-image remove-preview-btn" aria-label="Remove image" data-index="${index}"><i class="bi bi-x"></i></button>
+                    `;
+                    previewContainer.appendChild(div);
                 };
                 reader.readAsDataURL(file);
             });
+        };
+
+        previewContainer.addEventListener('click', (e) => {
+            const btn = e.target.closest('.remove-preview-btn');
+            if (btn) {
+                const indexToRemove = parseInt(btn.getAttribute('data-index'), 10);
+                const dt = new DataTransfer();
+                const files = Array.from(imageInput.files);
+                
+                for (let i = 0; i < files.length; i++) {
+                    if (i !== indexToRemove) {
+                        dt.items.add(files[i]);
+                    }
+                }
+                
+                imageInput.files = dt.files;
+                renderPreviews();
+            }
         });
+
+        imageInput.addEventListener('change', renderPreviews);
 
         // AI Generate Description logic
         const btnGenerateDescription = document.getElementById('btn-generate-description');
@@ -307,7 +370,9 @@ export async function initEditPage(params) {
                 }
 
                 btnGenerateDescription.disabled = true;
-                btnGenerateDescription.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Generating...';
+                btnGenerateDescription.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Generating description...';
+                const btnImproveDescription = document.getElementById('btn-improve-description');
+                if (btnImproveDescription) btnImproveDescription.disabled = true;
 
                 try {
                     const { generateDescription } = await import('../../services/aiService.js');
@@ -324,13 +389,14 @@ export async function initEditPage(params) {
                     });
 
                     document.getElementById('edit-description').value = generatedText;
-                    showToast('Description generated successfully!', 'success');
+                    showToast('Description generated successfully.', 'success');
                 } catch (err) {
                     console.error(err);
                     showToast('Failed to generate description.', 'danger');
                 } finally {
                     btnGenerateDescription.disabled = false;
                     btnGenerateDescription.innerHTML = '🤖 Generate Description';
+                    if (btnImproveDescription) btnImproveDescription.disabled = false;
                 }
             });
         }
@@ -347,19 +413,22 @@ export async function initEditPage(params) {
                 }
 
                 btnImproveDescription.disabled = true;
-                btnImproveDescription.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Improving...';
+                btnImproveDescription.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Generating description...';
+                const btnGenerateDescription = document.getElementById('btn-generate-description');
+                if (btnGenerateDescription) btnGenerateDescription.disabled = true;
 
                 try {
                     const { improveDescription } = await import('../../services/aiService.js');
                     const improvedText = await improveDescription(currentDesc);
                     descriptionArea.value = improvedText;
-                    showToast('Description improved successfully!', 'success');
+                    showToast('Description generated successfully.', 'success');
                 } catch (err) {
                     console.error(err);
                     showToast('Failed to improve description.', 'danger');
                 } finally {
                     btnImproveDescription.disabled = false;
                     btnImproveDescription.innerHTML = '✨ Improve Description';
+                    if (btnGenerateDescription) btnGenerateDescription.disabled = false;
                 }
             });
         }
@@ -498,7 +567,7 @@ async function renderExistingImages(listingId) {
             <div style="width: 100px; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid ${isCover ? 'var(--am-primary)' : '#e2e8f0'}; position: relative; group">
                 <img src="${url}" style="width: 100%; height: 100%; object-fit: cover;" alt="Listing Image" />
                 ${isCover ? '<div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(37,99,235,0.9); color: white; font-size: 0.6rem; text-align: center; padding: 2px;">COVER</div>' : ''}
-                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-1" aria-label="Delete image" style="background-color: rgba(220, 53, 69, 0.8); width: 0.5rem; height: 0.5rem;" data-path="${filePath}" onclick="window.handleDeleteImage('${filePath}', '${listingId}')"></button>
+                <button type="button" class="position-absolute top-0 end-0 m-1 btn-remove-image" aria-label="Delete image" data-path="${filePath}" onclick="window.handleDeleteImage('${filePath}', '${listingId}')"><i class="bi bi-x"></i></button>
             </div>
         `;
     }).join('');

@@ -123,8 +123,14 @@ h1, h2, h3, h4, h5, h6 {
     color: var(--am-white);
 }
 
-.btn-am-primary:active {
-    transform: translateY(0);
+.btn-am-primary:active,
+.btn-am-accent:active,
+.btn-am-info:active,
+.btn-am-outline:active,
+.btn-am-ghost:active {
+    transform: scale(0.96) translateY(0);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-am-accent {
@@ -141,6 +147,23 @@ h1, h2, h3, h4, h5, h6 {
 .btn-am-accent:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(245, 158, 11, 0.45);
+    color: var(--am-white);
+}
+
+.btn-am-info {
+    background: linear-gradient(135deg, var(--am-info) 0%, #0891b2 100%);
+    color: var(--am-white);
+    border: none;
+    border-radius: var(--am-radius-sm);
+    padding: 0.6rem 1.5rem;
+    font-weight: 600;
+    transition: var(--am-transition);
+    box-shadow: 0 4px 14px rgba(6, 182, 212, 0.3);
+}
+
+.btn-am-info:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(6, 182, 212, 0.45);
     color: var(--am-white);
 }
 
@@ -319,6 +342,62 @@ h1, h2, h3, h4, h5, h6 {
     font-size: 0.875rem;
     color: var(--am-dark-700);
     margin-bottom: 0.4rem;
+}
+
+/* File Input Browse Button */
+input[type="file"]::file-selector-button {
+    background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+    color: var(--am-white);
+    border: none;
+    border-radius: var(--am-radius-full);
+    padding: 0.5rem 1.25rem;
+    margin-right: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--am-transition);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+input[type="file"]::file-selector-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(139, 92, 246, 0.45);
+}
+
+input[type="file"]::file-selector-button:active {
+    transform: scale(0.95);
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.2);
+    transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Image Remove Button */
+.btn-remove-image {
+    background-color: var(--am-danger) !important;
+    color: var(--am-white) !important;
+    width: 26px !important;
+    height: 26px !important;
+    padding: 0 !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4) !important;
+    opacity: 0.95 !important;
+    border: 2px solid var(--am-white) !important;
+    border-radius: 50% !important;
+    transition: transform 0.15s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer;
+    z-index: 10;
+}
+
+.btn-remove-image i {
+    font-size: 16px;
+    line-height: 1;
+    pointer-events: none;
+}
+
+.btn-remove-image:hover {
+    opacity: 1 !important;
+    transform: scale(1.15) !important;
+    background-color: #b91c1c !important;
 }
 
 

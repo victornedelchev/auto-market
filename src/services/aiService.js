@@ -16,7 +16,22 @@ export async function generateDescription(carData) {
         return 'AI service is currently unavailable: API key is not configured. Please write a description manually.';
     }
 
-    const prompt = `Generate a professional sales description in English for the following vehicle.
+    const prompt = `You are a professional automotive sales copywriter.
+Write in English.
+
+Requirements:
+Professional tone
+Easy to read
+Maximum 180 words
+No marketing exaggerations
+Do not invent missing information
+Mention only supplied specifications
+End with a short invitation for contact
+Return only the description text.
+No markdown.
+No headings.
+
+Vehicle Details:
 Brand: ${carData.make || 'Unknown'}
 Model: ${carData.model || 'Unknown'}
 Year: ${carData.year || 'Unknown'}
@@ -25,14 +40,7 @@ Mileage: ${carData.mileage || 'Unknown'} km
 Fuel Type: ${carData.fuel_type || 'Unknown'}
 Transmission: ${carData.transmission || 'Unknown'}
 Horsepower: ${carData.horsepower || 'Unknown'}
-Color: ${carData.color || 'Unknown'}
-
-Requirements:
-- Natural sounding
-- No exaggerated claims
-- No fake information
-- Mention specifications only if provided.
-- Do not include markdown formatting.`;
+Color: ${carData.color || 'Unknown'}`;
 
     try {
         const isGeminiNative = API_URL.includes('generateContent');
@@ -109,7 +117,15 @@ export async function improveDescription(existingDescription) {
         return 'Please provide an existing description for the AI to improve.';
     }
 
-    const prompt = `Improve the following car sales description. Make it more professional, engaging, and appealing to potential buyers. Fix any grammar or spelling mistakes. Improve formatting. Keep factual information unchanged. Do not invent specifications. Return only the improved plain text description without any markdown formatting.
+    const prompt = `You are an editor.
+
+Improve grammar.
+Improve punctuation.
+Improve readability.
+Keep all factual information unchanged.
+Never invent specifications.
+Keep the language English.
+Return only the improved text.
 
 Original description:
 ${existingDescription}`;
