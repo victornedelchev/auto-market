@@ -127,11 +127,21 @@ export function renderEditPage(params = {}) {
 
                 <!-- Section 2: Description -->
                 <div class="p-4" style="border-bottom: 1px solid #e2e8f0;">
-                    <div class="section-header">
-                        <div class="section-icon"><i class="bi bi-text-paragraph"></i></div>
-                        <div>
-                            <h3 style="font-size: 1.15rem;">Description</h3>
-                            <span class="section-subtitle">Update your car's description</span>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="section-header mb-0">
+                            <div class="section-icon"><i class="bi bi-text-paragraph"></i></div>
+                            <div>
+                                <h3 style="font-size: 1.15rem;">Description</h3>
+                                <span class="section-subtitle">Update your car's description</span>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" id="btn-improve-description" class="btn btn-sm btn-am-accent hover-glow" title="Improve current description with AI" style="border-radius: var(--am-radius-full); padding: 0.4rem 1rem;">
+                                ✨ Improve Description
+                            </button>
+                            <button type="button" id="btn-generate-description" class="btn btn-sm btn-am-primary hover-glow" title="Generate description with AI" style="border-radius: var(--am-radius-full); padding: 0.4rem 1rem;">
+                                🤖 Generate Description
+                            </button>
                         </div>
                     </div>
                     <textarea class="form-control" id="edit-description" rows="5"></textarea>
@@ -276,6 +286,83 @@ export async function initEditPage(params) {
                 reader.readAsDataURL(file);
             });
         });
+
+        // AI Generate Description logic
+        const btnGenerateDescription = document.getElementById('btn-generate-description');
+        if (btnGenerateDescription) {
+            btnGenerateDescription.addEventListener('click', async () => {
+                const brand = document.getElementById('edit-brand').value.trim();
+                const model = document.getElementById('edit-model').value.trim();
+                const year = document.getElementById('edit-year').value.trim();
+                const mileage = document.getElementById('edit-mileage').value.trim();
+                const fuel = document.getElementById('edit-fuel_type').value;
+                const transmission = document.getElementById('edit-transmission').value;
+                const horsepower = document.getElementById('edit-horsepower').value.trim();
+                const color = document.getElementById('edit-color').value.trim();
+                const price = document.getElementById('edit-price').value.trim();
+
+                if (!brand || !model || !year) {
+                    showToast('Please fill in Brand, Model, and Year to generate a description.', 'warning');
+                    return;
+                }
+
+                btnGenerateDescription.disabled = true;
+                btnGenerateDescription.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Generating...';
+
+                try {
+                    const { generateDescription } = await import('../../services/aiService.js');
+                    const generatedText = await generateDescription({
+                        make: brand,
+                        model: model,
+                        year: year,
+                        mileage: mileage,
+                        fuel_type: fuel,
+                        transmission: transmission,
+                        horsepower: horsepower,
+                        color: color,
+                        price: price
+                    });
+
+                    document.getElementById('edit-description').value = generatedText;
+                    showToast('Description generated successfully!', 'success');
+                } catch (err) {
+                    console.error(err);
+                    showToast('Failed to generate description.', 'danger');
+                } finally {
+                    btnGenerateDescription.disabled = false;
+                    btnGenerateDescription.innerHTML = '🤖 Generate Description';
+                }
+            });
+        }
+
+        // AI Improve Description logic
+        const btnImproveDescription = document.getElementById('btn-improve-description');
+        if (btnImproveDescription) {
+            btnImproveDescription.addEventListener('click', async () => {
+                const descriptionArea = document.getElementById('edit-description');
+                const currentDesc = descriptionArea.value.trim();
+                if (!currentDesc) {
+                    showToast('Please write some description first before improving.', 'warning');
+                    return;
+                }
+
+                btnImproveDescription.disabled = true;
+                btnImproveDescription.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Improving...';
+
+                try {
+                    const { improveDescription } = await import('../../services/aiService.js');
+                    const improvedText = await improveDescription(currentDesc);
+                    descriptionArea.value = improvedText;
+                    showToast('Description improved successfully!', 'success');
+                } catch (err) {
+                    console.error(err);
+                    showToast('Failed to improve description.', 'danger');
+                } finally {
+                    btnImproveDescription.disabled = false;
+                    btnImproveDescription.innerHTML = '✨ Improve Description';
+                }
+            });
+        }
 
     } catch (err) {
         console.error(err);

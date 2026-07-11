@@ -29,131 +29,144 @@ export function renderCreatePage() {
         </div>
     </div>
 
-    <div class="container" style="margin-top: -1.5rem; position: relative; z-index: 2; margin-bottom: 2rem;">
-        <div class="card-am-static">
-            <form id="create-listing-form" class="needs-validation" novalidate>
-                <!-- Section 1: Vehicle Info -->
-                <div class="p-4" style="border-bottom: 1px solid #e2e8f0;">
-                    <div class="section-header">
-                        <div class="section-icon"><i class="bi bi-car-front"></i></div>
-                        <div>
-                            <h3 style="font-size: 1.15rem;">Vehicle Information</h3>
-                            <span class="section-subtitle">Tell us about your car</span>
-                        </div>
-                    </div>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="create-title" class="form-label">Listing Title *</label>
-                            <input type="text" class="form-control" id="create-title" placeholder="e.g. BMW X5 M Sport 2022" required />
-                            <div class="invalid-feedback">Please enter a title.</div>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="create-brand" class="form-label">Make (Brand) *</label>
-                            <input type="text" class="form-control" id="create-brand" placeholder="e.g. BMW" required />
-                            <div class="invalid-feedback">Please enter a brand.</div>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="create-model" class="form-label">Model *</label>
-                            <input type="text" class="form-control" id="create-model" placeholder="e.g. X5" required />
-                            <div class="invalid-feedback">Please enter a model.</div>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="create-year" class="form-label">Year *</label>
-                            <input type="number" class="form-control" id="create-year" placeholder="2022" min="1885" max="${new Date().getFullYear()}" required />
-                            <div class="invalid-feedback">Enter a valid year.</div>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="create-price" class="form-label">Price (&euro;) *</label>
-                            <input type="number" class="form-control" id="create-price" placeholder="45000" min="0.01" step="0.01" required />
-                            <div class="invalid-feedback">Enter a valid positive price.</div>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="create-mileage" class="form-label">Mileage (km)</label>
-                            <input type="number" class="form-control" id="create-mileage" placeholder="32000" min="0.01" step="0.01" />
-                            <div class="invalid-feedback">Enter a valid positive mileage.</div>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="create-fuel_type" class="form-label">Fuel Type</label>
-                            <select class="form-select" id="create-fuel_type">
-                                <option value="">Select</option>
-                                <option value="gasoline">Petrol / Gasoline</option>
-                                <option value="diesel">Diesel</option>
-                                <option value="electric">Electric</option>
-                                <option value="hybrid">Hybrid</option>
-                                <option value="lpg">LPG</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="create-transmission" class="form-label">Transmission</label>
-                            <select class="form-select" id="create-transmission">
-                                <option value="">Select</option>
-                                <option value="automatic">Automatic</option>
-                                <option value="manual">Manual</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="create-engine" class="form-label">Engine</label>
-                            <input type="text" class="form-control" id="create-engine" placeholder="e.g. 3.0L Turbo" />
-                        </div>
-                        <div class="col-md-3">
-                            <label for="create-horsepower" class="form-label">Horsepower (HP)</label>
-                            <input type="number" class="form-control" id="create-horsepower" placeholder="e.g. 300" min="0.01" step="0.01" />
-                            <div class="invalid-feedback">Enter a valid positive horsepower.</div>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="create-color" class="form-label">Color</label>
-                            <input type="text" class="form-control" id="create-color" placeholder="e.g. Black" />
-                        </div>
-                        <div class="col-md-3">
-                            <label for="create-location" class="form-label">Location (City)</label>
-                            <input type="text" class="form-control" id="create-location" placeholder="e.g. Sofia" />
-                        </div>
+    <div class="container" style="margin-top: -2.5rem; position: relative; z-index: 2; margin-bottom: 4rem; max-width: 900px;">
+        <form id="create-listing-form" class="needs-validation" novalidate>
+            
+            <!-- Section 1: Vehicle Info -->
+            <div class="card-am-static p-4 p-md-5 mb-4 anim-slide-up delay-100" style="border-top: 4px solid var(--am-primary); box-shadow: var(--am-shadow-md);">
+                <div class="section-header mb-4">
+                    <div class="section-icon"><i class="bi bi-car-front"></i></div>
+                    <div>
+                        <h3 style="font-size: 1.25rem; font-weight: 700;">Vehicle Information</h3>
+                        <span class="section-subtitle">Tell us about your car</span>
                     </div>
                 </div>
+                <div class="row g-4">
+                    <div class="col-md-12">
+                        <label for="create-title" class="form-label text-muted small fw-bold text-uppercase tracking-wide">Listing Title *</label>
+                        <input type="text" class="form-control form-control-lg" id="create-title" placeholder="e.g. BMW X5 M Sport 2022" required />
+                        <div class="invalid-feedback">Please enter a title.</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="create-brand" class="form-label text-muted small fw-bold text-uppercase tracking-wide">Make (Brand) *</label>
+                        <input type="text" class="form-control" id="create-brand" placeholder="e.g. BMW" required />
+                        <div class="invalid-feedback">Please enter a brand.</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="create-model" class="form-label text-muted small fw-bold text-uppercase tracking-wide">Model *</label>
+                        <input type="text" class="form-control" id="create-model" placeholder="e.g. X5" required />
+                        <div class="invalid-feedback">Please enter a model.</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="create-year" class="form-label text-muted small fw-bold text-uppercase tracking-wide">Year *</label>
+                        <input type="number" class="form-control" id="create-year" placeholder="2022" min="1885" max="${new Date().getFullYear()}" required />
+                        <div class="invalid-feedback">Enter a valid year.</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="create-price" class="form-label text-muted small fw-bold text-uppercase tracking-wide">Price (&euro;) *</label>
+                        <input type="number" class="form-control" id="create-price" placeholder="45000" min="0.01" step="0.01" required />
+                        <div class="invalid-feedback">Enter a valid positive price.</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="create-mileage" class="form-label text-muted small fw-bold text-uppercase tracking-wide">Mileage (km)</label>
+                        <input type="number" class="form-control" id="create-mileage" placeholder="32000" min="0.01" step="0.01" />
+                        <div class="invalid-feedback">Enter a valid positive mileage.</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="create-fuel_type" class="form-label text-muted small fw-bold text-uppercase tracking-wide">Fuel Type</label>
+                        <select class="form-select" id="create-fuel_type">
+                            <option value="">Select</option>
+                            <option value="gasoline">Petrol / Gasoline</option>
+                            <option value="diesel">Diesel</option>
+                            <option value="electric">Electric</option>
+                            <option value="hybrid">Hybrid</option>
+                            <option value="lpg">LPG</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="create-transmission" class="form-label text-muted small fw-bold text-uppercase tracking-wide">Transmission</label>
+                        <select class="form-select" id="create-transmission">
+                            <option value="">Select</option>
+                            <option value="automatic">Automatic</option>
+                            <option value="manual">Manual</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="create-engine" class="form-label text-muted small fw-bold text-uppercase tracking-wide">Engine</label>
+                        <input type="text" class="form-control" id="create-engine" placeholder="e.g. 3.0L Turbo" />
+                    </div>
+                    <div class="col-md-4">
+                        <label for="create-horsepower" class="form-label text-muted small fw-bold text-uppercase tracking-wide">Horsepower (HP)</label>
+                        <input type="number" class="form-control" id="create-horsepower" placeholder="e.g. 300" min="0.01" step="0.01" />
+                        <div class="invalid-feedback">Enter a valid positive horsepower.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="create-color" class="form-label text-muted small fw-bold text-uppercase tracking-wide">Color</label>
+                        <input type="text" class="form-control" id="create-color" placeholder="e.g. Black" />
+                    </div>
+                    <div class="col-md-6">
+                        <label for="create-location" class="form-label text-muted small fw-bold text-uppercase tracking-wide">Location (City)</label>
+                        <input type="text" class="form-control" id="create-location" placeholder="e.g. Sofia" />
+                    </div>
+                </div>
+            </div>
 
-                <!-- Section 2: Description -->
-                <div class="p-4" style="border-bottom: 1px solid #e2e8f0;">
-                    <div class="section-header">
+            <!-- Section 2: Description -->
+            <div class="card-am-static p-4 p-md-5 mb-4 anim-slide-up delay-200" style="box-shadow: var(--am-shadow-md);">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="section-header mb-0">
                         <div class="section-icon"><i class="bi bi-text-paragraph"></i></div>
                         <div>
-                            <h3 style="font-size: 1.15rem;">Description</h3>
+                            <h3 style="font-size: 1.25rem; font-weight: 700;">Description</h3>
                             <span class="section-subtitle">Provide details that will help buyers</span>
                         </div>
                     </div>
-                    <textarea class="form-control" id="create-description" rows="5" placeholder="Describe your vehicle — condition, features, service history, reason for selling..."></textarea>
-                </div>
-
-                <!-- Section 3: Images -->
-                <div class="p-4" style="border-bottom: 1px solid #e2e8f0;">
-                    <div class="section-header">
-                        <div class="section-icon"><i class="bi bi-images"></i></div>
-                        <div>
-                            <h3 style="font-size: 1.15rem;">Photos</h3>
-                            <span class="section-subtitle">Upload up to 10 high-quality images</span>
-                        </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" id="btn-improve-description" class="btn btn-sm btn-am-accent hover-glow" title="Improve current description with AI" style="border-radius: var(--am-radius-full); padding: 0.4rem 1rem;">
+                            ✨ Improve Description
+                        </button>
+                        <button type="button" id="btn-generate-description" class="btn btn-sm btn-am-primary hover-glow" title="Generate description with AI" style="border-radius: var(--am-radius-full); padding: 0.4rem 1rem;">
+                            🤖 Generate Description
+                        </button>
                     </div>
-                    <div id="image-dropzone" style="border: 2px dashed #e2e8f0; border-radius: var(--am-radius); padding: 2.5rem; text-align: center; cursor: pointer; transition: all 0.2s ease;">
-                        <i class="bi bi-cloud-arrow-up" style="font-size: 2.5rem; color: var(--am-primary-light);"></i>
-                        <p style="color: var(--am-dark-600); font-weight: 500; margin: 0.75rem 0 0.25rem;">
-                            Drag & drop images here or click to browse
-                        </p>
-                        <small style="color: var(--am-gray-light);">JPG, PNG up to 5MB each · First image will be the cover</small>
-                        <input class="form-control mt-3" type="file" id="create-images" multiple accept="image/*" style="max-width: 300px; margin: 0 auto;" />
-                    </div>
-                    <div id="images-preview" class="d-flex gap-2 flex-wrap mt-3"></div>
                 </div>
+                <textarea class="form-control form-control-lg" id="create-description" rows="6" placeholder="Describe your vehicle — condition, features, service history, reason for selling..." style="resize: vertical;"></textarea>
+            </div>
 
-                <!-- Actions -->
-                <div class="p-4 d-flex justify-content-between align-items-center">
-                    <a href="#/browse" class="btn btn-am-outline">
-                        <i class="bi bi-x-lg me-1"></i>Cancel
-                    </a>
-                    <button type="submit" class="btn btn-am-primary btn-lg px-4" id="submit-create-btn">
-                        <i class="bi bi-rocket-takeoff me-2"></i>Publish Listing
-                    </button>
+            <!-- Section 3: Images -->
+            <div class="card-am-static p-4 p-md-5 mb-4 anim-slide-up delay-300" style="box-shadow: var(--am-shadow-md);">
+                <div class="section-header mb-4">
+                    <div class="section-icon"><i class="bi bi-images"></i></div>
+                    <div>
+                        <h3 style="font-size: 1.25rem; font-weight: 700;">Photos</h3>
+                        <span class="section-subtitle">Upload up to 10 high-quality images</span>
+                    </div>
                 </div>
-            </form>
-        </div>
+                <div id="image-dropzone" style="border: 2px dashed #cbd5e1; border-radius: var(--am-radius-lg); padding: 3rem 2rem; text-align: center; cursor: pointer; transition: all 0.3s ease; background: var(--am-light);">
+                    <div style="width: 80px; height: 80px; background: var(--am-white); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; box-shadow: var(--am-shadow-sm);">
+                        <i class="bi bi-cloud-arrow-up" style="font-size: 2.5rem; color: var(--am-primary);"></i>
+                    </div>
+                    <h4 style="color: var(--am-dark-800); font-weight: 600; margin-bottom: 0.5rem;">
+                        Drag & drop images here
+                    </h4>
+                    <p style="color: var(--am-gray); margin-bottom: 1.5rem;">or click to browse from your device</p>
+                    <small style="color: var(--am-gray-light); display: block; margin-bottom: 1rem;">JPG, PNG, WebP up to 5MB each. First image is the cover.</small>
+                    <input class="form-control" type="file" id="create-images" multiple accept="image/*" style="max-width: 350px; margin: 0 auto; border-radius: var(--am-radius-full);" />
+                </div>
+                <div id="images-preview" class="d-flex gap-3 flex-wrap mt-4"></div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card-am-static p-4 p-md-5 d-flex flex-column flex-sm-row justify-content-between align-items-center anim-slide-up delay-400 gap-3" style="background: var(--am-primary-50); border: 1px solid var(--am-primary-200); box-shadow: var(--am-shadow-md);">
+                <a href="#/browse" class="btn btn-am-outline" style="border-radius: var(--am-radius-full); padding: 0.7rem 1.5rem;">
+                    <i class="bi bi-arrow-left me-2"></i>Cancel
+                </a>
+                <button type="submit" class="btn btn-am-primary btn-lg hover-glow" id="submit-create-btn" style="border-radius: var(--am-radius-full); padding: 0.8rem 2.5rem; font-size: 1.1rem;">
+                    <i class="bi bi-rocket-takeoff me-2"></i>Publish Listing
+                </button>
+            </div>
+
+        </form>
     </div>`;
 }
 
@@ -206,6 +219,84 @@ export function initCreatePage() {
                 };
                 reader.readAsDataURL(file);
             });
+        });
+    }
+
+    // AI Generate Description logic
+    const btnGenerateDescription = document.getElementById('btn-generate-description');
+    if (btnGenerateDescription) {
+        btnGenerateDescription.addEventListener('click', async () => {
+            const brand = document.getElementById('create-brand').value.trim();
+            const model = document.getElementById('create-model').value.trim();
+            const year = document.getElementById('create-year').value.trim();
+            const mileage = document.getElementById('create-mileage').value.trim();
+            const fuel = document.getElementById('create-fuel_type').value;
+            const transmission = document.getElementById('create-transmission').value;
+            const horsepower = document.getElementById('create-horsepower').value.trim();
+            const color = document.getElementById('create-color').value.trim();
+            const price = document.getElementById('create-price').value.trim();
+
+            // We need at least some basic info to generate a good description
+            if (!brand || !model || !year) {
+                showToast('Please fill in Brand, Model, and Year to generate a description.', 'warning');
+                return;
+            }
+
+            btnGenerateDescription.disabled = true;
+            btnGenerateDescription.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Generating...';
+
+            try {
+                const { generateDescription } = await import('../../services/aiService.js');
+                const generatedText = await generateDescription({
+                    make: brand,
+                    model: model,
+                    year: year,
+                    mileage: mileage,
+                    fuel_type: fuel,
+                    transmission: transmission,
+                    horsepower: horsepower,
+                    color: color,
+                    price: price
+                });
+
+                document.getElementById('create-description').value = generatedText;
+                showToast('Description generated successfully!', 'success');
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to generate description.', 'danger');
+            } finally {
+                btnGenerateDescription.disabled = false;
+                btnGenerateDescription.innerHTML = '🤖 Generate Description';
+            }
+        });
+    }
+
+    // AI Improve Description logic
+    const btnImproveDescription = document.getElementById('btn-improve-description');
+    if (btnImproveDescription) {
+        btnImproveDescription.addEventListener('click', async () => {
+            const descriptionArea = document.getElementById('create-description');
+            const currentDesc = descriptionArea.value.trim();
+            if (!currentDesc) {
+                showToast('Please write some description first before improving.', 'warning');
+                return;
+            }
+
+            btnImproveDescription.disabled = true;
+            btnImproveDescription.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Improving...';
+
+            try {
+                const { improveDescription } = await import('../../services/aiService.js');
+                const improvedText = await improveDescription(currentDesc);
+                descriptionArea.value = improvedText;
+                showToast('Description improved successfully!', 'success');
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to improve description.', 'danger');
+            } finally {
+                btnImproveDescription.disabled = false;
+                btnImproveDescription.innerHTML = '✨ Improve Description';
+            }
         });
     }
 }
