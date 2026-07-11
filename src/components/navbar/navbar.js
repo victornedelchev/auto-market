@@ -87,7 +87,7 @@ export function renderNavbar() {
                         <button class="btn btn-link p-0 text-white dropdown-toggle hide-arrow" id="theme-toggle-btn" data-bs-toggle="dropdown" style="opacity: 0.8; font-size: 1.25rem; transition: opacity 0.2s;" title="Theme Settings">
                             <i id="theme-toggle-icon" class="bi bi-circle-half"></i>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" style="min-width: 140px; border-radius: 0.75rem;">
+                        <ul class="dropdown-menu dropdown-menu-lg-end shadow-sm border-0" style="min-width: 140px; border-radius: 0.75rem;">
                             <li><button class="dropdown-item d-flex align-items-center theme-select-btn" data-theme-val="light"><i class="bi bi-sun me-2 text-warning"></i> Light</button></li>
                             <li><button class="dropdown-item d-flex align-items-center theme-select-btn" data-theme-val="dark"><i class="bi bi-moon-stars me-2 text-primary"></i> Dark</button></li>
                             <li><button class="dropdown-item d-flex align-items-center theme-select-btn" data-theme-val="auto"><i class="bi bi-circle-half me-2 text-secondary"></i> Auto</button></li>
