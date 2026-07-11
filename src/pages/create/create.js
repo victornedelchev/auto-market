@@ -643,6 +643,20 @@ async function handleCreateSubmit(e) {
     };
 
     try {
+        // AI Generate Keywords automatically
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Generating AI Keywords...';
+        try {
+            const { generateKeywords } = await import('../../services/aiService.js');
+            const keywords = await generateKeywords(listingData);
+            if (keywords) {
+                listingData.search_keywords = keywords;
+            }
+        } catch (kwErr) {
+            console.error('Failed to generate keywords during creation', kwErr);
+        }
+
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Publishing...';
+
         // 1. Create the listing record
         const { data: newListing, error: createError } = await createListing(listingData);
 

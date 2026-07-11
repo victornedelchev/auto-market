@@ -70,7 +70,7 @@ export async function getListings({
 
     // Apply keyword search
     if (search) {
-        query = query.or(`title.ilike.%${search}%,brand.ilike.%${search}%,model.ilike.%${search}%`);
+        query = query.or(`title.ilike.%${search}%,brand.ilike.%${search}%,model.ilike.%${search}%,search_keywords.ilike.%${search}%`);
     }
 
     const { data, count, error } = await query;

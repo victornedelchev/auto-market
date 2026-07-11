@@ -674,6 +674,20 @@ async function handleEditSubmit(e, id) {
     };
 
     try {
+        // AI Generate Keywords automatically
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Generating AI Keywords...';
+        try {
+            const { generateKeywords } = await import('../../services/aiService.js');
+            const keywords = await generateKeywords(updates);
+            if (keywords) {
+                updates.search_keywords = keywords;
+            }
+        } catch (kwErr) {
+            console.error('Failed to generate keywords during edit', kwErr);
+        }
+
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Saving...';
+
         const { error } = await updateListing(id, updates);
         if (error) throw error;
 

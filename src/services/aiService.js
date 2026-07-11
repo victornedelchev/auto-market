@@ -80,7 +80,11 @@ Color: ${carData.color || 'Unknown'}`;
         const response = await fetch(fetchUrl, fetchOptions);
 
         if (!response.ok) {
-            console.error('AI API Error:', response.status, await response.text());
+            const errText = await response.text();
+            console.error('AI API Error:', response.status, errText);
+            if (response.status === 429) {
+                return 'API rate limit exceeded. Please try again in a few minutes or write a description manually.';
+            }
             return 'Sorry, the AI is temporarily unavailable and could not generate a description at this time. Please try again later or write a description manually.';
         }
 
@@ -166,7 +170,11 @@ ${existingDescription}`;
         const response = await fetch(fetchUrl, fetchOptions);
 
         if (!response.ok) {
-            console.error('AI API Error:', response.status, await response.text());
+            const errText = await response.text();
+            console.error('AI API Error:', response.status, errText);
+            if (response.status === 429) {
+                return 'API rate limit exceeded. Please try again in a few minutes.';
+            }
             return 'Sorry, the AI is temporarily unavailable and could not improve the description at this time. Please try again later.';
         }
 
@@ -205,11 +213,11 @@ Requirements:
 - Maximum 70 characters
 - No clickbait
 - Professional tone
-- Bulgarian language
+- English language
 - Return ONLY the title text, nothing else. No quotes, no markdown.
 
 Examples of good titles:
-- BMW 320d xDrive 2021 • 190 к.с.
+- BMW 320d xDrive 2021 • 190 HP
 - Toyota Corolla Hybrid 2022
 - VW Golf 7 2.0 TDI DSG
 
@@ -258,7 +266,11 @@ Mileage: ${carData.mileage || 'Unknown'} km`;
         const response = await fetch(fetchUrl, fetchOptions);
 
         if (!response.ok) {
-            console.error('AI API Error:', response.status, await response.text());
+            const errText = await response.text();
+            console.error('AI API Error:', response.status, errText);
+            if (response.status === 429) {
+                return 'Error: AI Quota Exceeded (Rate Limit). Please try again later.';
+            }
             return 'AI Error';
         }
 
@@ -360,7 +372,8 @@ ${text}`;
         const response = await fetch(fetchUrl, fetchOptions);
 
         if (!response.ok) {
-            console.error('AI API Error:', response.status, await response.text());
+            const errText = await response.text();
+            console.error('AI API Error:', response.status, errText);
             return null;
         }
 
@@ -394,5 +407,99 @@ ${text}`;
     } catch (error) {
         console.error('Failed to extract specifications:', error);
         return null;
+    }
+}
+
+/**
+ * Generates 10 SEO search keywords for a car listing.
+ * @param {Object} carData - The details of the car.
+ * @returns {Promise<string>} A comma-separated string of exactly 10 keywords.
+ */
+export async function generateKeywords(carData) {
+    if (!API_KEY) {
+        return '';
+    }
+
+    const prompt = `You are an SEO expert.
+Generate exactly 10 search keywords for this car listing.
+The keywords should include important details that buyers search for, such as brand, model, fuel type, transmission, body type, specific features, horsepower, year, color, or terms like "Used car".
+Return ONLY the 10 keywords as a comma-separated list, nothing else. No numbers, no markdown.
+
+Examples of good keywords:
+BMW, 320d, Diesel, Automatic, Sedan, xDrive, Used car, 190 HP, 2019, Black
+
+Vehicle Details:
+Title: ${carData.title || 'Unknown'}
+Brand: ${carData.make || carData.brand || 'Unknown'}
+Model: ${carData.model || 'Unknown'}
+Year: ${carData.year || 'Unknown'}
+Fuel Type: ${carData.fuel_type || 'Unknown'}
+Horsepower: ${carData.horsepower || 'Unknown'}
+Transmission: ${carData.transmission || 'Unknown'}
+Color: ${carData.color || 'Unknown'}
+Description: ${carData.description ? carData.description.substring(0, 500) : 'None'}`;
+
+    try {
+        const isGeminiNative = API_URL.includes('generateContent');
+        let fetchUrl = API_URL;
+        let fetchOptions = {};
+
+        if (isGeminiNative) {
+            const urlObj = new URL(API_URL);
+            urlObj.searchParams.set('key', API_KEY);
+            fetchUrl = urlObj.toString();
+            
+            fetchOptions = {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }]
+                })
+            };
+        } else {
+            fetchOptions = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: import.meta.env.VITE_AI_MODEL || 'gpt-3.5-turbo',
+                    messages: [{ role: 'user', content: prompt }],
+                    temperature: 0.5,
+                    max_tokens: 100
+                })
+            };
+        }
+
+        const response = await fetch(fetchUrl, fetchOptions);
+
+        if (!response.ok) {
+            const errText = await response.text();
+            console.error('AI API Error:', response.status, errText);
+            return '';
+        }
+
+        const data = await response.json();
+        
+        let resultText = '';
+        if (isGeminiNative) {
+            if (data && data.candidates && data.candidates.length > 0) {
+                resultText = data.candidates[0].content.parts[0].text.trim();
+            }
+        } else {
+            if (data && data.choices && data.choices.length > 0) {
+                resultText = data.choices[0].message.content.trim();
+            }
+        }
+        
+        if (resultText) {
+            return resultText;
+        }
+
+        return '';
+    } catch (error) {
+        console.error('Failed to generate keywords:', error);
+        return '';
     }
 }
