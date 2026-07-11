@@ -174,9 +174,48 @@ export async function initHomePage() {
     const container = document.getElementById('home-featured-listings');
     if (!container) return;
 
+    // Attach event listener for favorite buttons
+    container.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.favorite-btn');
+        if (!btn) return;
+
+        const { getUser } = await import('../../utils/authState.js');
+        const user = getUser();
+        if (!user) {
+            const { showToast } = await import('../../utils/toastService.js');
+            const { navigateTo } = await import('../../utils/router.js');
+            showToast('Please log in to add favorites.', 'warning');
+            navigateTo('/login');
+            return;
+        }
+
+        const listingId = btn.getAttribute('data-id');
+        const icon = btn.querySelector('i');
+        const isCurrentlyFavorite = icon.classList.contains('bi-heart-fill');
+
+        try {
+            const { addFavorite, removeFavorite } = await import('../../services/listingService.js');
+            if (isCurrentlyFavorite) {
+                await removeFavorite(user.id, listingId);
+                icon.classList.replace('bi-heart-fill', 'bi-heart');
+                icon.classList.remove('text-danger');
+                btn.title = 'Add to favorites';
+            } else {
+                await addFavorite(user.id, listingId);
+                icon.classList.replace('bi-heart', 'bi-heart-fill');
+                icon.classList.add('text-danger');
+                btn.title = 'Remove from favorites';
+            }
+        } catch (err) {
+            const { showToast } = await import('../../utils/toastService.js');
+            showToast('Failed to update favorites.', 'error');
+        }
+    });
+
     try {
-        const { getListings } = await import('../../services/listingService.js');
+        const { getListings, getFavorites } = await import('../../services/listingService.js');
         const { getListingImageUrls } = await import('../../services/storageService.js');
+        const { getUser } = await import('../../utils/authState.js');
 
         // Fetch up to 50 latest listings to pick randomly from
         const { data: listings, error } = await getListings({ limit: 50 });
@@ -185,6 +224,16 @@ export async function initHomePage() {
         if (!listings || listings.length === 0) {
             container.innerHTML = '<div class="col-12 text-center text-muted py-5">No listings available.</div>';
             return;
+        }
+
+        // Fetch favorites for current user to mark them in the UI
+        let userFavoriteIds = new Set();
+        const user = getUser();
+        if (user) {
+            const { data: favorites } = await getFavorites(user.id);
+            if (favorites) {
+                userFavoriteIds = new Set(favorites.map(f => f.listing_id));
+            }
         }
 
         // Shuffle and pick 3
@@ -196,6 +245,7 @@ export async function initHomePage() {
             listing.coverUrl = (urls && urls.length > 0) 
                 ? urls[0] 
                 : 'https://dummyimage.com/600x400/e2e8f0/64748b&text=No+Image';
+            listing.isFavorite = userFavoriteIds.has(listing.id);
             return listing;
         }));
 

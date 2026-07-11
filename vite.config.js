@@ -1,15 +1,13 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+  esbuild: {
+    drop: ['console', 'debugger'],
+  },
   build: {
     outDir: 'dist',
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-      },
-    },
+    minify: 'esbuild',
+    target: 'esnext',
     rollupOptions: {
       output: {
         manualChunks(id) {
