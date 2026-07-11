@@ -25,7 +25,7 @@ export function renderImageGallery(images = [], galleryId = 'carGallery') {
                 class="${index === 0 ? 'active' : ''}"
                 aria-current="${index === 0 ? 'true' : 'false'}"
                 aria-label="Slide ${index + 1}"
-                style="width: 10px; height: 10px; border-radius: 50%; border: 2px solid #fff; opacity: ${index === 0 ? '1' : '0.5'};">
+                style="width: 10px; height: 10px; border-radius: 50%; border: 2px solid #fff;">
         </button>`).join('');
 
     const slides = images.map((src, index) => `

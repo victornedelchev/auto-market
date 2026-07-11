@@ -30,7 +30,7 @@ export function renderListingCard(listing = {}) {
                 </button>
                 <span style="
                     position: absolute;
-                    bottom: 12px;
+                    top: 12px;
                     left: 12px;
                     background: var(--am-gradient-primary);
                     color: #fff;
