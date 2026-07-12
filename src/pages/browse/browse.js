@@ -71,15 +71,41 @@ export function renderBrowsePage() {
  * Initialize the browse page (attach events and fetch initial data).
  */
 export function initBrowsePage() {
-    currentPage = 1;
+    const savedStateStr = sessionStorage.getItem('browse_state');
+    if (savedStateStr) {
+        try {
+            const savedState = JSON.parse(savedStateStr);
+            currentPage = savedState.currentPage || 1;
+            currentView = savedState.currentView || 'grid';
+            
+            if (savedState.filters) {
+                const f = savedState.filters;
+                if (f.search) document.getElementById('filter-keyword').value = f.search;
+                if (f.brand) document.getElementById('filter-make').value = f.brand;
+                if (f.model) document.getElementById('filter-model').value = f.model;
+                if (f.fuel) document.getElementById('filter-fuel').value = f.fuel;
+                if (f.transmission) document.getElementById('filter-transmission').value = f.transmission;
+                if (f.minYear) document.getElementById('filter-year-min').value = f.minYear;
+                if (f.maxYear) document.getElementById('filter-year-max').value = f.maxYear;
+                if (f.minPrice) document.getElementById('filter-price-min').value = f.minPrice;
+                if (f.maxPrice) document.getElementById('filter-price-max').value = f.maxPrice;
+                if (f.sortOption) document.getElementById('filter-sort').value = f.sortOption;
+            }
+        } catch(e) {
+            currentPage = 1;
+        }
+    } else {
+        currentPage = 1;
+    }
+
     const form = document.getElementById('search-filters-form');
     const handleSearchClick = () => {
         currentPage = 1;
         fetchAndRenderListings();
     };
 
-    const updateViewMode = (mode) => {
-        if (currentView === mode) return;
+    const updateViewMode = (mode, force = false) => {
+        if (currentView === mode && !force) return;
         currentView = mode;
         
         const btnGrid = document.getElementById('btn-view-grid');
@@ -99,7 +125,12 @@ export function initBrowsePage() {
             btnGrid.style.background = 'transparent';
             grid.className = 'row row-cols-1 g-4 mb-4 list-view';
         }
+        
+        saveBrowseState();
     };
+
+    // Apply the initial view mode
+    updateViewMode(currentView, true);
 
     const btnGrid = document.getElementById('btn-view-grid');
     if (btnGrid) btnGrid.addEventListener('click', () => updateViewMode('grid'));
@@ -191,6 +222,8 @@ export function initBrowsePage() {
  * Fetch listings from Supabase and render them into the grid.
  */
 async function fetchAndRenderListings() {
+    saveBrowseState();
+
     const grid = document.getElementById('browse-grid');
     const loading = document.getElementById('browse-loading');
     const countDisplay = document.getElementById('browse-results-count');
@@ -306,4 +339,27 @@ async function fetchAndRenderListings() {
         loading.style.display = 'none';
         grid.style.display = 'flex';
     }
+}
+
+/**
+ * Save current browse state (pagination, view, filters) to sessionStorage.
+ */
+function saveBrowseState() {
+    const state = {
+        currentPage,
+        currentView,
+        filters: {
+            search: document.getElementById('filter-keyword')?.value || '',
+            brand: document.getElementById('filter-make')?.value || '',
+            model: document.getElementById('filter-model')?.value || '',
+            fuel: document.getElementById('filter-fuel')?.value || '',
+            transmission: document.getElementById('filter-transmission')?.value || '',
+            minYear: document.getElementById('filter-year-min')?.value || '',
+            maxYear: document.getElementById('filter-year-max')?.value || '',
+            minPrice: document.getElementById('filter-price-min')?.value || '',
+            maxPrice: document.getElementById('filter-price-max')?.value || '',
+            sortOption: document.getElementById('filter-sort')?.value || 'newest'
+        }
+    };
+    sessionStorage.setItem('browse_state', JSON.stringify(state));
 }

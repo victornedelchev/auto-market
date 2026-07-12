@@ -83,9 +83,9 @@ export async function initDetailsPage(params = {}) {
                 </ol>
             </nav>
 
-            <div class="row g-4">
+            <div class="row g-4 align-items-stretch">
                 <!-- Image Gallery -->
-                <div class="col-lg-7 anim-slide-right" id="details-gallery-container">
+                <div class="col-lg-7 anim-slide-right d-flex" id="details-gallery-container">
                     ${galleryHtml}
                 </div>
 

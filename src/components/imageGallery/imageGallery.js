@@ -12,9 +12,11 @@
 export function renderImageGallery(images = [], galleryId = 'carGallery') {
     if (images.length === 0) {
         return `
-        <div class="text-center py-5 rounded-3" style="background: var(--am-light); border: 2px dashed #e2e8f0;">
-            <i class="bi bi-image" style="font-size: 3rem; color: var(--am-gray-light);"></i>
-            <p style="color: var(--am-gray); margin-top: 0.75rem;">No images available</p>
+        <div class="w-100 position-relative" style="min-height: 400px;">
+            <div class="text-center py-5 rounded-3 d-flex flex-column justify-content-center align-items-center w-100 h-100" style="background: var(--am-light); border: 2px dashed #e2e8f0; position: absolute; inset: 0;">
+                <i class="bi bi-image" style="font-size: 3rem; color: var(--am-gray-light);"></i>
+                <p style="color: var(--am-gray); margin-top: 0.75rem;">No images available</p>
+            </div>
         </div>`;
     }
 
@@ -29,9 +31,9 @@ export function renderImageGallery(images = [], galleryId = 'carGallery') {
         </button>`).join('');
 
     const slides = images.map((src, index) => `
-        <div class="carousel-item ${index === 0 ? 'active' : ''}">
-            <img src="${src}" class="d-block w-100" alt="Car image ${index + 1}"
-                 style="height: 420px; object-fit: cover; object-position: center bottom;" />
+        <div class="carousel-item w-100 h-100 ${index === 0 ? 'active' : ''}">
+            <img src="${src}" class="d-block" alt="Car image ${index + 1}"
+                 style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center;" />
             <button type="button" onclick="window.downloadCarPhoto('${src}', 'car-photo-${index + 1}.jpg')"
                style="position: absolute; bottom: 16px; right: 16px; width: 40px; height: 40px; 
                       background: rgba(0,0,0,0.55); backdrop-filter: blur(8px); color: #fff; 
@@ -45,12 +47,12 @@ export function renderImageGallery(images = [], galleryId = 'carGallery') {
         </div>`).join('');
 
     return `
-    <div style="border-radius: var(--am-radius-lg); overflow: hidden; box-shadow: var(--am-shadow-lg); position: relative;">
-        <div id="${galleryId}" class="carousel slide" data-bs-ride="carousel">
-            <div class="carousel-indicators" style="margin-bottom: 1rem;">
+    <div class="w-100 position-relative" style="border-radius: var(--am-radius-lg); overflow: hidden; box-shadow: var(--am-shadow-lg); min-height: 400px;">
+        <div id="${galleryId}" class="carousel slide" data-bs-ride="carousel" style="position: absolute; inset: 0;">
+            <div class="carousel-indicators" style="margin-bottom: 1rem; z-index: 15;">
                 ${indicators}
             </div>
-            <div class="carousel-inner">
+            <div class="carousel-inner" style="position: absolute; inset: 0; width: 100%; height: 100%;">
                 ${slides}
             </div>
             <button class="carousel-control-prev" type="button" data-bs-target="#${galleryId}" data-bs-slide="prev"
