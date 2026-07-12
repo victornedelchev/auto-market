@@ -27,7 +27,7 @@ export function renderListingCard(listing = {}, options = {}) {
             <div class="card-img-wrapper img-hover-zoom" style="position: relative;">
                 ${showEdit ? `<a href="#/edit/${id}" class="btn btn-sm btn-am-primary position-absolute" style="top: 12px; right: 12px; z-index: 10; border-radius: 6px; box-shadow: var(--am-shadow);"><i class="bi bi-pencil-square me-1"></i>Edit</a>` : ''}
                 <img src="${image}" alt="${title}"
-                     style="width: 100%; height: 200px; object-fit: cover; display: block;" />
+                     style="width: 100%; height: 220px; object-fit: cover; object-position: center 80%; display: block; border-bottom: 1px solid #e2e8f0;" />
                 <button class="favorite-btn" data-id="${id}" title="${listing.isFavorite ? 'Remove from favorites' : 'Add to favorites'}" aria-label="Favorite">
                     <i class="bi ${listing.isFavorite ? 'bi-heart-fill text-danger' : 'bi-heart'}" style="font-size: 0.95rem;"></i>
                 </button>
