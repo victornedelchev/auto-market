@@ -17,7 +17,7 @@ import { initTheme } from './utils/themeService.js';
 import { renderNavbar, initNavbar } from './components/navbar/navbar.js';
 import { renderFooter, initFooter } from './components/footer/footer.js';
 import { renderAiAssistant, initAiAssistant } from './components/aiAssistant/aiAssistant.js';
-import { renderCompareBar, initCompareBar } from './components/compareBar/compareBar.js';
+import { renderCompareBar, initCompareBar, clearCompareSelection } from './components/compareBar/compareBar.js';
 
 // Import pages
 import { renderHomePage, initHomePage } from './pages/home/home.js';
@@ -104,8 +104,11 @@ setNotFound(() => `
 // ── Auth State Listener ─────────────────────────────────────────────────
 
 // Re-render navbar whenever auth state changes (login / logout / token refresh)
-onAuthChange(() => {
+onAuthChange((user) => {
     updateNavbar();
+    if (!user) {
+        clearCompareSelection();
+    }
 });
 
 // Update navbar active state on every navigation

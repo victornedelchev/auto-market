@@ -67,25 +67,25 @@ export function renderHomePage() {
                         <div class="row g-3">
                             <div class="col-6">
                                 <div style="background: rgba(37,99,235,0.12); border-radius: var(--am-radius); padding: 1.25rem; text-align: center;">
-                                    <div style="font-family: var(--am-font-display); font-weight: 800; font-size: 1.8rem; color: #fff;">1.2K+</div>
+                                    <div class="stat-counter" data-target="1.2K+" style="font-family: var(--am-font-display); font-weight: 800; font-size: 1.8rem; color: #fff;">0</div>
                                     <div style="color: rgba(255,255,255,0.5); font-size: 0.8rem;">Active Listings</div>
                                 </div>
                             </div>
                             <div class="col-6">
                                 <div style="background: rgba(245,158,11,0.12); border-radius: var(--am-radius); padding: 1.25rem; text-align: center;">
-                                    <div style="font-family: var(--am-font-display); font-weight: 800; font-size: 1.8rem; color: #fff;">5K+</div>
+                                    <div class="stat-counter" data-target="5K+" style="font-family: var(--am-font-display); font-weight: 800; font-size: 1.8rem; color: #fff;">0</div>
                                     <div style="color: rgba(255,255,255,0.5); font-size: 0.8rem;">Happy Users</div>
                                 </div>
                             </div>
                             <div class="col-6">
                                 <div style="background: rgba(16,185,129,0.12); border-radius: var(--am-radius); padding: 1.25rem; text-align: center;">
-                                    <div style="font-family: var(--am-font-display); font-weight: 800; font-size: 1.8rem; color: #fff;">98%</div>
+                                    <div class="stat-counter" data-target="98%" style="font-family: var(--am-font-display); font-weight: 800; font-size: 1.8rem; color: #fff;">0</div>
                                     <div style="color: rgba(255,255,255,0.5); font-size: 0.8rem;">Satisfaction</div>
                                 </div>
                             </div>
                             <div class="col-6">
                                 <div style="background: rgba(6,182,212,0.12); border-radius: var(--am-radius); padding: 1.25rem; text-align: center;">
-                                    <div style="font-family: var(--am-font-display); font-weight: 800; font-size: 1.8rem; color: #fff;">24/7</div>
+                                    <div class="stat-counter" data-target="24/7" style="font-family: var(--am-font-display); font-weight: 800; font-size: 1.8rem; color: #fff;">0</div>
                                     <div style="color: rgba(255,255,255,0.5); font-size: 0.8rem;">Support</div>
                                 </div>
                             </div>
@@ -171,6 +171,42 @@ export function renderHomePage() {
  * Initialize the home page (fetch random featured listings).
  */
 export async function initHomePage() {
+    // Animate stats
+    const counters = document.querySelectorAll('.stat-counter');
+    counters.forEach(counter => {
+        const targetStr = counter.getAttribute('data-target');
+        const match = targetStr.match(/^([\d.]+)(.*)$/);
+        if (!match) {
+            counter.textContent = targetStr;
+            return;
+        }
+        const target = parseFloat(match[1]);
+        const suffix = match[2];
+        const duration = 2000;
+        const startTime = performance.now();
+        
+        const update = (currentTime) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const easeProgress = progress * (2 - progress); // easeOutQuad
+            
+            let current = easeProgress * target;
+            
+            if (target % 1 !== 0) {
+                counter.textContent = current.toFixed(1) + suffix;
+            } else {
+                counter.textContent = Math.floor(current) + suffix;
+            }
+            
+            if (progress < 1) {
+                requestAnimationFrame(update);
+            } else {
+                counter.textContent = targetStr;
+            }
+        };
+        requestAnimationFrame(update);
+    });
+
     const container = document.getElementById('home-featured-listings');
     if (!container) return;
 

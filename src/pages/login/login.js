@@ -131,7 +131,7 @@ async function handleLoginSubmit(e) {
         // Wait a tiny bit for authState to update, then check if profile is active
         const { getProfile } = await import('../../services/profileService.js');
         const { data: profile } = await getProfile(data.session.user.id);
-        
+
         if (profile && profile.is_active === false) {
             const { logout } = await import('../../services/authService.js');
             await logout();

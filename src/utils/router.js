@@ -3,6 +3,7 @@
  * Routes are registered as { path, handler, afterRender } objects.
  * The handler receives any route parameters extracted from the URL.
  */
+import { clearCompareSelection } from '../components/compareBar/compareBar.js';
 
 const routes = [];
 let notFoundHandler = null;
@@ -67,6 +68,9 @@ function matchRoute(hash) {
  * Resolve the current hash and render the matching page into the outlet element.
  */
 async function resolveRoute() {
+    // Clear any active car comparisons when navigating to a new page
+    clearCompareSelection();
+
     const outlet = document.getElementById('router-outlet');
     if (!outlet) return;
 
