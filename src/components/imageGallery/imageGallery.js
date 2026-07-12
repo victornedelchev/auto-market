@@ -31,7 +31,7 @@ export function renderImageGallery(images = [], galleryId = 'carGallery') {
     const slides = images.map((src, index) => `
         <div class="carousel-item ${index === 0 ? 'active' : ''}">
             <img src="${src}" class="d-block w-100" alt="Car image ${index + 1}"
-                 style="height: 420px; object-fit: cover;" />
+                 style="height: 420px; object-fit: cover; object-position: center bottom;" />
             <button type="button" onclick="window.downloadCarPhoto('${src}', 'car-photo-${index + 1}.jpg')"
                style="position: absolute; bottom: 16px; right: 16px; width: 40px; height: 40px; 
                       background: rgba(0,0,0,0.55); backdrop-filter: blur(8px); color: #fff; 

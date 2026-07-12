@@ -171,42 +171,6 @@ export function renderHomePage() {
  * Initialize the home page (fetch random featured listings).
  */
 export async function initHomePage() {
-    // Animate stats
-    const counters = document.querySelectorAll('.stat-counter');
-    counters.forEach(counter => {
-        const targetStr = counter.getAttribute('data-target');
-        const match = targetStr.match(/^([\d.]+)(.*)$/);
-        if (!match) {
-            counter.textContent = targetStr;
-            return;
-        }
-        const target = parseFloat(match[1]);
-        const suffix = match[2];
-        const duration = 2000;
-        const startTime = performance.now();
-        
-        const update = (currentTime) => {
-            const elapsed = currentTime - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-            const easeProgress = progress * (2 - progress); // easeOutQuad
-            
-            let current = easeProgress * target;
-            
-            if (target % 1 !== 0) {
-                counter.textContent = current.toFixed(1) + suffix;
-            } else {
-                counter.textContent = Math.floor(current) + suffix;
-            }
-            
-            if (progress < 1) {
-                requestAnimationFrame(update);
-            } else {
-                counter.textContent = targetStr;
-            }
-        };
-        requestAnimationFrame(update);
-    });
-
     const container = document.getElementById('home-featured-listings');
     if (!container) return;
 
@@ -254,8 +218,52 @@ export async function initHomePage() {
         const { getUser } = await import('../../utils/authState.js');
 
         // Fetch up to 50 latest listings to pick randomly from
-        const { data: listings, error } = await getListings({ limit: 50 });
+        const { data: listings, count, error } = await getListings({ limit: 50 });
         if (error) throw error;
+
+        // Update stats with actual listings count
+        if (count !== undefined && count !== null) {
+            const listingsCounter = document.querySelector('.stat-counter[data-target="1.2K+"]');
+            if (listingsCounter) {
+                listingsCounter.setAttribute('data-target', count.toString());
+            }
+        }
+
+        // Animate stats
+        const counters = document.querySelectorAll('.stat-counter');
+        counters.forEach(counter => {
+            const targetStr = counter.getAttribute('data-target');
+            const match = targetStr.match(/^([\d.]+)(.*)$/);
+            if (!match) {
+                counter.textContent = targetStr;
+                return;
+            }
+            const target = parseFloat(match[1]);
+            const suffix = match[2];
+            const duration = 2000;
+            const startTime = performance.now();
+            
+            const update = (currentTime) => {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easeProgress = progress * (2 - progress); // easeOutQuad
+                
+                let current = easeProgress * target;
+                
+                if (target % 1 !== 0) {
+                    counter.textContent = current.toFixed(1) + suffix;
+                } else {
+                    counter.textContent = Math.floor(current) + suffix;
+                }
+                
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                } else {
+                    counter.textContent = targetStr;
+                }
+            };
+            requestAnimationFrame(update);
+        });
 
         if (!listings || listings.length === 0) {
             container.innerHTML = '<div class="col-12 text-center text-muted py-5">No listings available.</div>';
