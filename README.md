@@ -4,13 +4,16 @@ AutoMarket AI is a modern, premium web application for buying and selling cars, 
 
 ## 📝 Project Description
 
-AutoMarket AI serves as a next-generation car marketplace. 
-- **Guests** can browse listings, view detailed car pages, and use the smart search functionality.
-- **Registered Users** can create, edit, and delete their own car listings. They can upload multiple images, manage their profiles (including avatars), and save favorite cars to their personal watchlist.
-- **Administrators** have access to a dedicated Admin Control Center where they can view platform statistics, manage all users (activate, deactivate, delete, change roles), and manage any listing on the platform.
+AutoMarket AI is a next-generation car marketplace that fundamentally transforms how users buy and sell vehicles by weaving Artificial Intelligence into every step of the journey.
+
+- **Guests** can browse and search for vehicles, and notably, select any two cars to generate an instant, side-by-side **AI Vehicle Comparison**. The AI acts as a virtual automotive expert, analyzing both cars and providing a comprehensive breakdown of engine performance, economy, comfort, and a final recommendation.
+- **Registered Users** can easily create and manage their listings using a suite of AI-powered tools. When selling a car, they can paste a messy paragraph of text and use the **AI Specifications Extractor** to instantly fill out the form fields. They can utilize the **AI Title Generator** for click-worthy titles, use the **AI Description Generator & Improver** to automatically write or polish their sales copy, and rely on the **AI Auto-Keywords** feature to automatically generate hidden SEO tags that boost their listing's visibility in search results.
+- **Administrators** run the platform through a dedicated Admin Control Center, managing user accounts (roles, activation status) and overseeing all AI-optimized listings on the platform.
 
 ### ✨ Emphasized AI Functionalities
+
 The core unique selling point of this platform is the deep integration of Artificial Intelligence via a centralized, rate-limited, and cached AI Service layer:
+
 1. **AI Specifications Extractor**: Users can paste a raw, unstructured block of text (e.g., from another website) and the AI will automatically parse and fill out the structured form fields (Brand, Model, Year, Price, etc.).
 2. **AI Title Generator**: Automatically suggests a highly optimized, click-worthy title based on the entered car specifications.
 3. **AI Description Generator & Improver**: Generates professional, sales-optimized automotive copy from scratch, or improves the grammar and tone of an existing user-written description.
@@ -24,18 +27,21 @@ The core unique selling point of this platform is the deep integration of Artifi
 The project is built as a Single Page Application (SPA) using modern, lightweight technologies without heavy frontend frameworks.
 
 **Frontend:**
+
 - **Core**: Vanilla JavaScript (ESModules), HTML5, CSS3.
 - **Routing**: Custom hash-based router (`#/`, `#/login`, `#/profile`, etc.).
 - **Styling**: Bootstrap 5 (via CDN) for grid and base components, heavily customized with a centralized CSS design system (`index.css`) featuring CSS variables, gradients, and micro-animations.
 - **Build Tool**: Vite (for local development server and optimized production builds).
 
 **Backend & Database (BaaS):**
+
 - **Platform**: Supabase
 - **Database**: PostgreSQL
 - **Authentication**: Supabase Auth (Email/Password)
 - **Storage**: Supabase Storage Buckets (`car-images`, `avatars`)
 
 **AI Provider:**
+
 - Native integration with OpenAI API (or Gemini), routed through a custom `aiService.js` that implements advanced prompt engineering, request deduplication, in-memory caching, and rate limiting.
 
 ---
@@ -45,7 +51,9 @@ The project is built as a Single Page Application (SPA) using modern, lightweigh
 The application relies on a relational PostgreSQL database hosted on Supabase.
 
 ### 1. `profiles` Table
+
 Stores extended user data linked to the Supabase Auth system.
+
 - `id` (UUID, Primary Key, References `auth.users`)
 - `username` (Text, Unique)
 - `full_name` (Text)
@@ -58,7 +66,9 @@ Stores extended user data linked to the Supabase Auth system.
 - `created_at` (Timestamp)
 
 ### 2. `listings` Table
+
 Stores all vehicle listings.
+
 - `id` (UUID, Primary Key)
 - `seller_id` (UUID, Foreign Key -> `profiles.id`)
 - `make` (Text)
@@ -77,18 +87,21 @@ Stores all vehicle listings.
 - `created_at` (Timestamp)
 
 ### 3. `favorites` Table
+
 Junction table for the many-to-many relationship between users and their favorite listings.
+
 - `user_id` (UUID, Foreign Key -> `profiles.id`)
 - `listing_id` (UUID, Foreign Key -> `listings.id`)
 - *Composite Primary Key (`user_id`, `listing_id`)*
 
-### Relationships Visualized:
+### Relationships Visualized
+
 \`\`\`mermaid
 erDiagram
     PROFILES ||--o{ LISTINGS : "creates"
     PROFILES ||--o{ FAVORITES : "saves"
     LISTINGS ||--o{ FAVORITES : "is saved as"
-    
+
     PROFILES {
         uuid id PK
         string role
@@ -121,7 +134,7 @@ erDiagram
    VITE_SUPABASE_URL=your_supabase_project_url
    VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
    VITE_AI_API_KEY=your_openai_or_gemini_api_key
-   VITE_AI_API_URL=https://api.openai.com/v1/chat/completions
+   VITE_AI_API_URL=<https://api.openai.com/v1/chat/completions>
    VITE_AI_MODEL=gpt-3.5-turbo
    \`\`\`
 4. **Start the Development Server**:
