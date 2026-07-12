@@ -588,14 +588,7 @@ async function loadUserListings(page = 1) {
                     image: coverImage,
                     fuel: l.fuel_type || 'N/A'
                 };
-                const cardHtml = renderListingCard(displayListing);
-                return `
-                <div class="position-relative">
-                    ${cardHtml}
-                    <a href="#/edit/${l.id}" class="btn btn-sm btn-am-primary position-absolute" style="top: 15px; right: 25px; z-index: 10; border-radius: 6px; box-shadow: var(--am-shadow);">
-                        <i class="bi bi-pencil-square me-1"></i>Edit
-                    </a>
-                </div>`;
+                return renderListingCard(displayListing, { showEdit: true });
             }).join('')}
         </div>
     `;

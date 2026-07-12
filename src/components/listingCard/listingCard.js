@@ -5,10 +5,11 @@
 
 /**
  * Render a single listing card.
- * @param {Object} listing - The listing data object.
+ * @param {Object} options - Configuration options (e.g. showEdit).
  * @returns {string} The card markup.
  */
-export function renderListingCard(listing = {}) {
+export function renderListingCard(listing = {}, options = {}) {
+    const { showEdit = false } = options;
     const {
         id = '',
         title = 'Car Title',
@@ -24,6 +25,7 @@ export function renderListingCard(listing = {}) {
     <div class="col animate-on-scroll" id="listing-card-${id}">
         <div class="listing-card h-100">
             <div class="card-img-wrapper img-hover-zoom" style="position: relative;">
+                ${showEdit ? `<a href="#/edit/${id}" class="btn btn-sm btn-am-primary position-absolute" style="top: 12px; right: 12px; z-index: 10; border-radius: 6px; box-shadow: var(--am-shadow);"><i class="bi bi-pencil-square me-1"></i>Edit</a>` : ''}
                 <img src="${image}" alt="${title}"
                      style="width: 100%; height: 200px; object-fit: cover; display: block;" />
                 <button class="favorite-btn" data-id="${id}" title="${listing.isFavorite ? 'Remove from favorites' : 'Add to favorites'}" aria-label="Favorite">
@@ -50,7 +52,7 @@ export function renderListingCard(listing = {}) {
                 <div class="d-flex gap-2 flex-wrap mb-3">
                     <span class="listing-badge"><i class="bi bi-calendar3"></i>${year}</span>
                     <span class="listing-badge"><i class="bi bi-fuel-pump"></i>${fuel}</span>
-                    <span class="listing-badge"><i class="bi bi-speedometer2"></i>${mileage.toLocaleString()} km</span>
+                    <span class="listing-badge"><i class="bi bi-speedometer2"></i>${mileage ? mileage.toLocaleString() : '0'} km</span>
                 </div>
                 ${search_keywords ? `
                 <div class="d-flex flex-wrap gap-1 mb-3">
