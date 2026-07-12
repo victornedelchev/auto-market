@@ -15,6 +15,7 @@ import { initTheme } from './utils/themeService.js';
 // Import layout components
 import { renderNavbar, initNavbar } from './components/navbar/navbar.js';
 import { renderFooter, initFooter } from './components/footer/footer.js';
+import { renderAiAssistant, initAiAssistant } from './components/aiAssistant/aiAssistant.js';
 
 // Import pages
 import { renderHomePage, initHomePage } from './pages/home/home.js';
@@ -40,6 +41,7 @@ function renderLayout() {
         <div id="navbar-container">${renderNavbar()}</div>
         <div id="router-outlet" class="flex-grow-1"></div>
         <div id="footer-container">${renderFooter()}</div>
+        <div id="ai-assistant-container">${renderAiAssistant()}</div>
         <!-- Global Toast Container -->
         <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1090"></div>
     `;
@@ -49,6 +51,9 @@ function renderLayout() {
     
     // Attach footer event listeners (newsletter form)
     initFooter();
+
+    // Initialize AI assistant
+    initAiAssistant();
 }
 
 /**
