@@ -123,15 +123,7 @@ h1, h2, h3, h4, h5, h6 {
     color: var(--am-white);
 }
 
-.btn-am-primary:active,
-.btn-am-accent:active,
-.btn-am-info:active,
-.btn-am-outline:active,
-.btn-am-ghost:active {
-    transform: scale(0.96) translateY(0);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
-}
+
 
 .btn-am-accent {
     background: var(--am-gradient-accent);
@@ -202,6 +194,15 @@ h1, h2, h3, h4, h5, h6 {
     transform: translateY(-2px);
 }
 
+.btn-am-primary:active,
+.btn-am-accent:active,
+.btn-am-info:active,
+.btn-am-outline:active,
+.btn-am-ghost:active {
+    transform: scale(0.96) translateY(0);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
 /* ── Custom Card Styles ── */
 .card-am {

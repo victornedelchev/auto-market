@@ -58,7 +58,7 @@ export function renderEditPage(params = {}) {
                     <div class="mb-3">
                         <textarea class="form-control" id="edit-extract-text" rows="3" placeholder="Paste car details here..."></textarea>
                     </div>
-                    <button type="button" id="btn-extract-specs-edit" class="btn btn-sm btn-am-info hover-glow" style="border-radius: var(--am-radius-full); padding: 0.4rem 1rem;">
+                    <button type="button" id="btn-extract-specs-edit" class="btn btn-sm btn-am-info" style="border-radius: var(--am-radius-full); padding: 0.4rem 1rem;">
                         ⚡ Extract Specifications
                     </button>
                 </div>
@@ -76,7 +76,7 @@ export function renderEditPage(params = {}) {
                         <div class="col-md-6">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <label for="edit-title" class="form-label mb-0">Listing Title *</label>
-                                <button type="button" id="btn-suggest-title-edit" class="btn btn-sm btn-am-primary hover-glow" title="Suggest title with AI" style="border-radius: var(--am-radius-full); padding: 0.2rem 0.8rem;">
+                                <button type="button" id="btn-suggest-title-edit" class="btn btn-sm btn-am-primary" title="Suggest title with AI" style="border-radius: var(--am-radius-full); padding: 0.2rem 0.8rem;">
                                     💡 Suggest Title
                                 </button>
                             </div>
@@ -158,10 +158,10 @@ export function renderEditPage(params = {}) {
                             </div>
                         </div>
                         <div class="d-flex gap-2">
-                            <button type="button" id="btn-improve-description" class="btn btn-sm btn-am-info hover-glow" title="Improve current description with AI" style="border-radius: var(--am-radius-full); padding: 0.4rem 1rem;">
+                            <button type="button" id="btn-improve-description" class="btn btn-sm btn-am-info" title="Improve current description with AI" style="border-radius: var(--am-radius-full); padding: 0.4rem 1rem;">
                                 ✨ Improve Description
                             </button>
-                            <button type="button" id="btn-generate-description" class="btn btn-sm btn-am-primary hover-glow" title="Generate description with AI" style="border-radius: var(--am-radius-full); padding: 0.4rem 1rem;">
+                            <button type="button" id="btn-generate-description" class="btn btn-sm btn-am-primary" title="Generate description with AI" style="border-radius: var(--am-radius-full); padding: 0.4rem 1rem;">
                                 🤖 Generate Description
                             </button>
                         </div>
@@ -187,10 +187,17 @@ export function renderEditPage(params = {}) {
                         </div>
                     </div>
 
-                    <div id="edit-image-dropzone" style="border: 2px dashed #e2e8f0; border-radius: var(--am-radius); padding: 1.5rem; text-align: center; cursor: pointer; transition: all 0.2s ease;">
-                        <i class="bi bi-cloud-arrow-up" style="font-size: 1.8rem; color: var(--am-primary-light);"></i>
-                        <p style="color: var(--am-dark-600); font-weight: 500; font-size: 0.9rem; margin: 0.5rem 0 0.25rem;">Upload additional images</p>
-                        <input class="form-control mt-2" type="file" id="edit-images" multiple accept="image/*" style="max-width: 280px; margin: 0 auto;" />
+                    <div id="edit-image-dropzone" style="border: 2px dashed #cbd5e1; border-radius: var(--am-radius-lg); padding: 3rem 2rem; text-align: center; cursor: pointer; transition: all 0.3s ease; background: var(--am-light);">
+                        <div style="width: 80px; height: 80px; background: var(--am-white); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; box-shadow: var(--am-shadow-sm);">
+                            <i class="bi bi-cloud-arrow-up" style="font-size: 2.5rem; color: var(--am-primary);"></i>
+                        </div>
+                        <h4 style="color: var(--am-dark-800); font-weight: 600; margin-bottom: 0.5rem;">
+                            Drag & drop images here
+                        </h4>
+                        <p style="color: var(--am-gray); margin-bottom: 1.5rem;">or</p>
+                        <button type="button" class="btn btn-am-primary px-4 mb-3" style="border-radius: var(--am-radius-full);">Browse Files</button>
+                        <small style="color: var(--am-gray-light); display: block;">JPG, PNG, WebP up to 5MB each.</small>
+                        <input type="file" id="edit-images" multiple accept="image/*" style="display: none;" />
                     </div>
                     <div id="edit-images-preview" class="d-flex gap-2 flex-wrap mt-3"></div>
                 </div>
