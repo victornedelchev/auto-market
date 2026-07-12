@@ -1,133 +1,174 @@
 # AutoMarket AI
 
+AutoMarket AI is a modern, premium web application for buying and selling cars, supercharged with cutting-edge Artificial Intelligence. The platform offers a sleek, responsive user interface and seamless user experience, while leveraging AI to automate and enhance the listing creation and vehicle comparison processes.
+
 ## 📝 Project Description
-AutoMarket AI is a premium, modern single-page car marketplace web application. It leverages artificial intelligence (via Google Gemini API) to streamline the process of creating car listings by auto-extracting specifications from text and generating SEO-optimized titles, descriptions, and keywords. 
 
-**User Roles & Permissions:**
-- **Guests (Unauthenticated Users)**: Can browse the home page, search for cars, and view listing details.
-- **Registered Users**: Can create, edit, and delete their own car listings. They can upload multiple images, use AI to generate descriptions, and save favorite listings to their profile.
-- **Administrators**: Have access to a dedicated Admin Control Center where they can manage all users (suspend/activate), moderate platform content (delete any listing), and view platform statistics.
+AutoMarket AI serves as a next-generation car marketplace. 
+- **Guests** can browse listings, view detailed car pages, and use the smart search functionality.
+- **Registered Users** can create, edit, and delete their own car listings. They can upload multiple images, manage their profiles (including avatars), and save favorite cars to their personal watchlist.
+- **Administrators** have access to a dedicated Admin Control Center where they can view platform statistics, manage all users (activate, deactivate, delete, change roles), and manage any listing on the platform.
 
-## 🏗️ Architecture & Technologies Used
+### ✨ Emphasized AI Functionalities
+The core unique selling point of this platform is the deep integration of Artificial Intelligence via a centralized, rate-limited, and cached AI Service layer:
+1. **AI Specifications Extractor**: Users can paste a raw, unstructured block of text (e.g., from another website) and the AI will automatically parse and fill out the structured form fields (Brand, Model, Year, Price, etc.).
+2. **AI Title Generator**: Automatically suggests a highly optimized, click-worthy title based on the entered car specifications.
+3. **AI Description Generator & Improver**: Generates professional, sales-optimized automotive copy from scratch, or improves the grammar and tone of an existing user-written description.
+4. **AI Auto-Keywords**: Behind the scenes, the AI automatically analyzes the listing on save and generates exactly 10 highly relevant SEO search tags.
+5. **AI Vehicle Comparison**: Users can select two cars from the browse page or homepage and ask the AI to compare them. The AI generates a detailed, side-by-side technical and practical comparison directly injected into the UI as formatted HTML.
 
-- **Front-end**: 
-  - **HTML5 & CSS3**: Custom responsive styling with advanced UI elements (glassmorphism, animations).
-  - **Vanilla JavaScript (ES Modules)**: Component-based architecture without heavy frameworks.
-  - **Bootstrap 5**: Used for rapid layout structuring and grid system.
-  - **Vite**: Ultra-fast build tool and development server.
-- **Back-end (BaaS)**: 
-  - **Supabase**: Handles backend logic without managing a custom server.
-    - **Authentication**: JWT-based secure user sessions.
-    - **PostgreSQL Database**: Relational data storage with Row Level Security (RLS).
-    - **Storage**: Scalable storage buckets for car images and avatars.
-- **AI Integration**:
-  - **Google Gemini API**: Utilized for automated data extraction, title generation, and SEO keywords.
+---
+
+## 🏗️ Architecture & Technologies
+
+The project is built as a Single Page Application (SPA) using modern, lightweight technologies without heavy frontend frameworks.
+
+**Frontend:**
+- **Core**: Vanilla JavaScript (ESModules), HTML5, CSS3.
+- **Routing**: Custom hash-based router (`#/`, `#/login`, `#/profile`, etc.).
+- **Styling**: Bootstrap 5 (via CDN) for grid and base components, heavily customized with a centralized CSS design system (`index.css`) featuring CSS variables, gradients, and micro-animations.
+- **Build Tool**: Vite (for local development server and optimized production builds).
+
+**Backend & Database (BaaS):**
+- **Platform**: Supabase
+- **Database**: PostgreSQL
+- **Authentication**: Supabase Auth (Email/Password)
+- **Storage**: Supabase Storage Buckets (`car-images`, `avatars`)
+
+**AI Provider:**
+- Native integration with OpenAI API (or Gemini), routed through a custom `aiService.js` that implements advanced prompt engineering, request deduplication, in-memory caching, and rate limiting.
+
+---
 
 ## 🗄️ Database Schema Design
 
-The application utilizes a PostgreSQL database structured around five main entities.
+The application relies on a relational PostgreSQL database hosted on Supabase.
 
-```mermaid
+### 1. `profiles` Table
+Stores extended user data linked to the Supabase Auth system.
+- `id` (UUID, Primary Key, References `auth.users`)
+- `username` (Text, Unique)
+- `full_name` (Text)
+- `email` (Text)
+- `phone` (Text)
+- `city` (Text)
+- `avatar_url` (Text)
+- `role` (Text, default: 'user', can be 'admin')
+- `status` (Text, default: 'active')
+- `created_at` (Timestamp)
+
+### 2. `listings` Table
+Stores all vehicle listings.
+- `id` (UUID, Primary Key)
+- `seller_id` (UUID, Foreign Key -> `profiles.id`)
+- `make` (Text)
+- `model` (Text)
+- `year` (Integer)
+- `price` (Numeric)
+- `mileage` (Integer)
+- `fuel_type` (Text)
+- `transmission` (Text)
+- `engine` (Text)
+- `horsepower` (Integer)
+- `color` (Text)
+- `location` (Text)
+- `description` (Text)
+- `search_keywords` (Text)
+- `created_at` (Timestamp)
+
+### 3. `favorites` Table
+Junction table for the many-to-many relationship between users and their favorite listings.
+- `user_id` (UUID, Foreign Key -> `profiles.id`)
+- `listing_id` (UUID, Foreign Key -> `listings.id`)
+- *Composite Primary Key (`user_id`, `listing_id`)*
+
+### Relationships Visualized:
+\`\`\`mermaid
 erDiagram
-    PROFILES ||--o{ CAR_LISTINGS : "creates"
-    PROFILES ||--o{ FAVORITES : "adds"
-    CAR_LISTINGS ||--o{ FAVORITES : "is_favorited"
-    PROFILES ||--o| USER_ROLES : "has_role"
-    CAR_LISTINGS ||--o{ CAR_IMAGES : "has_images"
-
+    PROFILES ||--o{ LISTINGS : "creates"
+    PROFILES ||--o{ FAVORITES : "saves"
+    LISTINGS ||--o{ FAVORITES : "is saved as"
+    
     PROFILES {
-        uuid id PK "Matches auth.users"
-        string username
-        string full_name
-        string avatar_url
-        boolean is_active
-    }
-
-    USER_ROLES {
         uuid id PK
-        uuid user_id FK
-        string role "admin or user"
+        string role
+        string status
     }
-
-    CAR_LISTINGS {
+    LISTINGS {
         uuid id PK
         uuid seller_id FK
-        string title
-        string brand
-        string model
-        integer year
+        string make
         numeric price
-        string condition
-        integer mileage
-        string fuel_type
-        string transmission
-        string description
-        string search_keywords
     }
-
-    CAR_IMAGES {
-        uuid id PK
-        uuid listing_id FK
-        string image_url
-    }
-
     FAVORITES {
-        uuid id PK
         uuid user_id FK
         uuid listing_id FK
     }
-```
+\`\`\`
 
-## 🛠️ Local Development Setup Guide
+---
 
-Follow these steps to run AutoMarket AI locally on your machine:
+## 🚀 Local Development Setup Guide
 
-1. **Clone the repository:**
-   ```bash
-   git clone <your-repo-url>
-   cd auto-market
-   ```
-
-2. **Install dependencies:**
-   Make sure you have Node.js installed, then run:
-   ```bash
+1. **Clone the repository** (if applicable) and navigate to the root directory.
+2. **Install Node.js dependencies**:
+   \`\`\`bash
    npm install
-   ```
-
-3. **Environment Configuration:**
-   Create a `.env` file in the root directory and add your Supabase credentials and Gemini API key:
-   ```env
+   \`\`\`
+3. **Environment Variables**:
+   Create a `.env` file in the root directory and provide your keys:
+   \`\`\`env
    VITE_SUPABASE_URL=your_supabase_project_url
    VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-   VITE_GEMINI_API_KEY=your_gemini_api_key
-   ```
-
-4. **Start the Development Server:**
-   ```bash
+   VITE_AI_API_KEY=your_openai_or_gemini_api_key
+   VITE_AI_API_URL=https://api.openai.com/v1/chat/completions
+   VITE_AI_MODEL=gpt-3.5-turbo
+   \`\`\`
+4. **Start the Development Server**:
+   \`\`\`bash
    npm run dev
-   ```
-   *The app will be available at `http://localhost:5173`.*
+   \`\`\`
+5. Open your browser and navigate to the `localhost` URL provided by Vite (usually `http://localhost:5173`).
 
-5. **Build for Production:**
-   ```bash
-   npm run build
-   ```
+---
 
-## 📂 Key Folders and Files
+## 📁 Key Folders and Files & Their Purpose
 
-- `/public`: Contains static public assets (e.g., favicon, generated mock images).
-- `/src`: The core source code of the application.
-  - `/src/pages`: Contains all page modules. Each folder (e.g., `home`, `browse`, `create`, `admin`) houses the JS logic for rendering and interacting with that specific page.
-  - `/src/components`: Reusable UI components like the Navbar, Footer, Image Gallery, and Listing Cards.
-  - `/src/services`: Handles all external API and backend communications.
-    - `supabase.js`: Initializes the Supabase client.
-    - `authService.js`: Handles user registration, login, and sessions.
-    - `listingService.js`: CRUD operations for car listings.
-    - `aiService.js`: Prompts and logic for the Gemini AI integration.
-  - `/src/styles`: Global CSS variables and utility classes (`main.css`, `variables.css`).
-  - `/src/utils`: Helper functions.
-    - `router.js`: Custom client-side hash router implementation.
-    - `themeService.js`: Manages the Light/Dark/Auto theme switching.
-- `index.html`: The main entry point of the Single Page Application.
-- `main.js`: Initializes the app, router, and authentication state on startup.
-- `vite.config.js`: Configuration for the Vite bundler.
+\`\`\`text
+auto-market/
+├── public/                 # Static assets (images, icons) served directly at the root path.
+├── src/
+│   ├── components/         # Reusable UI components.
+│   │   ├── compareBar/     # The floating global AI Comparison toolbar.
+│   │   ├── footer/         # Global footer component.
+│   │   ├── listingCard/    # The standard car card component used across multiple pages.
+│   │   └── navbar/         # Global navigation bar component.
+│   ├── pages/              # Logic and templates for specific route views.
+│   │   ├── admin/          # Admin Dashboard (Stats, User & Listing management).
+│   │   ├── browse/         # Search, filter, and pagination logic for all cars.
+│   │   ├── create/         # Create listing form + AI spec extraction & title gen.
+│   │   ├── details/        # Single car view with image gallery.
+│   │   ├── edit/           # Edit listing form (mirrors create page).
+│   │   ├── favorites/      # User's saved watchlist.
+│   │   ├── home/           # Landing page with hero section and featured cars.
+│   │   ├── login/          # Auth logic (Login / Register).
+│   │   └── profile/        # User dashboard, avatar upload, and "My Listings".
+│   ├── services/           # Data layer for communicating with external APIs.
+│   │   ├── adminService.js # Admin-specific Supabase queries.
+│   │   ├── aiService.js    # Centralized AI API logic (caching, deduplication, rate limits).
+│   │   ├── authService.js  # Supabase authentication wrapper.
+│   │   ├── listingService.js # CRUD operations for listings and favorites.
+│   │   ├── profileService.js # User profile and metadata operations.
+│   │   └── storageService.js # Supabase Storage wrapper for image uploads.
+│   ├── styles/             # Global CSS stylesheets (index.css contains the design system).
+│   ├── utils/              # Helper functions.
+│   │   ├── animations.js   # IntersectionObserver for scroll animations.
+│   │   ├── authState.js    # Global state manager for current user and admin checks.
+│   │   ├── modalService.js # Reusable Bootstrap modal generator (Confirmations).
+│   │   ├── router.js       # Hash-based SPA routing engine.
+│   │   └── toastService.js # Reusable toast notification generator.
+│   └── main.js             # Application entry point; initializes router and global state.
+├── index.html              # The single HTML shell for the SPA.
+├── package.json            # Project metadata and npm scripts.
+└── README.md               # You are here!
+\`\`\`
