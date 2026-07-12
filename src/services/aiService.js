@@ -503,3 +503,117 @@ Description: ${carData.description ? carData.description.substring(0, 500) : 'No
         return '';
     }
 }
+
+/**
+ * Generates an HTML formatted comparison between two car listings.
+ * @param {Object} car1 - The details of the first car.
+ * @param {Object} car2 - The details of the second car.
+ * @returns {Promise<string>} The generated comparison in HTML format.
+ */
+export async function generateCarComparison(car1, car2) {
+    if (!API_KEY) {
+        return '<div class="alert alert-warning">AI service is currently unavailable.</div>';
+    }
+
+    const prompt = `You are an expert automotive reviewer.
+Generate a detailed comparison between two cars based on their specifications.
+The output MUST be formatted as an HTML fragment (do not include <html>, <head>, or <body> tags, just the content).
+Use Bootstrap 5 classes for styling (e.g., tables, badges, cards, text colors).
+Do not use markdown blocks like \`\`\`html.
+The comparison MUST include the following sections exactly:
+1. Engine
+2. Power
+3. Economy
+4. Comfort
+5. Equipment
+6. Advantages (for each car)
+7. Disadvantages (for each car)
+8. Recommendation (overall conclusion)
+
+Car 1 Details:
+Brand/Model: ${car1.make || 'Unknown'} ${car1.model || ''}
+Year: ${car1.year || 'Unknown'}
+Price: €${car1.price || 'Unknown'}
+Fuel: ${car1.fuel_type || 'Unknown'}
+Engine: ${car1.engine || 'Unknown'}
+Transmission: ${car1.transmission || 'Unknown'}
+Horsepower: ${car1.horsepower || 'Unknown'}
+Mileage: ${car1.mileage || 'Unknown'} km
+Description: ${car1.description || 'None'}
+
+Car 2 Details:
+Brand/Model: ${car2.make || 'Unknown'} ${car2.model || ''}
+Year: ${car2.year || 'Unknown'}
+Price: €${car2.price || 'Unknown'}
+Fuel: ${car2.fuel_type || 'Unknown'}
+Engine: ${car2.engine || 'Unknown'}
+Transmission: ${car2.transmission || 'Unknown'}
+Horsepower: ${car2.horsepower || 'Unknown'}
+Mileage: ${car2.mileage || 'Unknown'} km
+Description: ${car2.description || 'None'}`;
+
+    try {
+        const isGeminiNative = API_URL.includes('generateContent');
+        let fetchUrl = API_URL;
+        let fetchOptions = {};
+
+        if (isGeminiNative) {
+            const urlObj = new URL(API_URL);
+            urlObj.searchParams.set('key', API_KEY);
+            fetchUrl = urlObj.toString();
+            
+            fetchOptions = {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }]
+                })
+            };
+        } else {
+            fetchOptions = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: import.meta.env.VITE_AI_MODEL || 'gpt-3.5-turbo',
+                    messages: [{ role: 'user', content: prompt }],
+                    temperature: 0.7,
+                    max_tokens: 1500
+                })
+            };
+        }
+
+        const response = await fetch(fetchUrl, fetchOptions);
+
+        if (!response.ok) {
+            console.error('AI API Error:', response.status);
+            return '<div class="alert alert-danger">Failed to generate comparison. AI service error.</div>';
+        }
+
+        const data = await response.json();
+        
+        let resultText = '';
+        if (isGeminiNative) {
+            if (data && data.candidates && data.candidates.length > 0) {
+                resultText = data.candidates[0].content.parts[0].text.trim();
+            }
+        } else {
+            if (data && data.choices && data.choices.length > 0) {
+                resultText = data.choices[0].message.content.trim();
+            }
+        }
+        
+        if (resultText) {
+            // Remove markdown HTML wrappers if present
+            resultText = resultText.replace(/\`\`\`html/g, '').replace(/\`\`\`/g, '').trim();
+            return resultText;
+        }
+
+        return '<div class="alert alert-danger">Invalid response from AI.</div>';
+    } catch (error) {
+        console.error('Failed to generate comparison:', error);
+        return '<div class="alert alert-danger">Network error while connecting to AI.</div>';
+    }
+}

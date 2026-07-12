@@ -107,7 +107,7 @@ export function renderHomePage() {
                         <span class="section-subtitle">Hand-picked cars just for you</span>
                     </div>
                 </div>
-                <a href="#/browse" class="btn btn-am-outline btn-sm d-none d-md-inline-flex">
+                <a href="#/browse" class="btn btn-am-primary btn-sm d-none d-md-inline-flex">
                     View All <i class="bi bi-arrow-right ms-1"></i>
                 </a>
             </div>
@@ -257,6 +257,9 @@ export async function initHomePage() {
 
         const { initScrollAnimations } = await import('../../utils/animations.js');
         initScrollAnimations();
+
+        const { updateCompareBar } = await import('../../components/compareBar/compareBar.js');
+        updateCompareBar();
 
     } catch (err) {
         console.error('Failed to load featured listings:', err);

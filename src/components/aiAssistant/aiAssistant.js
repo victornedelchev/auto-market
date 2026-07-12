@@ -1,9 +1,8 @@
 export function renderAiAssistant() {
     return `
         <!-- Floating Action Button -->
-        <button type="button" class="btn btn-am-primary rounded-circle shadow-lg d-flex align-items-center justify-content-center" 
+        <button type="button" class="btn btn-am-primary rounded-circle shadow-lg d-flex align-items-center justify-content-center ai-assistant-btn" 
                 data-bs-toggle="modal" data-bs-target="#aiAssistantModal"
-                style="position: fixed; bottom: 2rem; right: 2rem; width: 60px; height: 60px; z-index: 1050;"
                 title="Ask AI Assistant">
             <i class="bi bi-robot fs-3"></i>
         </button>

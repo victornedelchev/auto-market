@@ -60,10 +60,13 @@ export function renderListingCard(listing = {}) {
                     ${search_keywords.split(',').length > 3 ? `<span style="font-size: 0.75rem; color: var(--am-gray); padding: 2px 4px;">+${search_keywords.split(',').length - 3}</span>` : ''}
                 </div>
                 ` : ''}
-                <div class="mt-auto">
-                    <a href="#/details/${id}" class="btn btn-am-outline btn-sm w-100">
+                <div class="mt-auto d-flex gap-2">
+                    <a href="#/details/${id}" class="btn btn-am-primary btn-sm flex-grow-1">
                         View Details <i class="bi bi-arrow-right ms-1"></i>
                     </a>
+                    <button class="btn btn-am-info btn-sm compare-btn d-flex align-items-center justify-content-center gap-1" data-id="${id}" title="Select for AI comparison">
+                        <i class="bi bi-robot"></i> <span style="font-size: 0.8rem; font-weight: 500;">Compare</span>
+                    </button>
                 </div>
             </div>
         </div>

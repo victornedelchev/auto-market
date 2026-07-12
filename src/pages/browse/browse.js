@@ -1,11 +1,12 @@
 import { renderSearchFilters } from '../../components/searchFilters/searchFilters.js';
 import { renderListingCard } from '../../components/listingCard/listingCard.js';
 import { renderPagination } from '../../components/pagination/pagination.js';
-import { getListings, getFavorites, addFavorite, removeFavorite } from '../../services/listingService.js';
+import { getListings, getFavorites, addFavorite, removeFavorite, getListingById } from '../../services/listingService.js';
 import { getListingImageUrls } from '../../services/storageService.js';
 import { getUser } from '../../utils/authState.js';
 import { showToast } from '../../utils/toastService.js';
 import { navigateTo } from '../../utils/router.js';
+import { updateCompareBar } from '../../components/compareBar/compareBar.js';
 
 let currentPage = 1;
 const itemsPerPage = 12;
@@ -181,7 +182,9 @@ export function initBrowsePage() {
         });
     }
 
-    fetchAndRenderListings();
+    fetchAndRenderListings().then(() => {
+        updateCompareBar();
+    });
 }
 
 /**

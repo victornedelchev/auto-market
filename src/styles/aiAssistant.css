@@ -1,0 +1,16 @@
+/* AI Assistant Button Positioning */
+.ai-assistant-btn {
+    position: fixed;
+    z-index: 1050;
+    width: 60px;
+    height: 60px;
+    bottom: 2rem;
+    right: 2rem;
+}
+
+@media (max-width: 768px) {
+    .ai-assistant-btn {
+        bottom: 5.5rem; /* Moves up above the compare bar on mobile */
+        right: 1.5rem;
+    }
+}

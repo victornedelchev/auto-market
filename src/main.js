@@ -3,6 +3,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import 'bootstrap-icons/font/bootstrap-icons.min.css';
 import './styles/main.css';
+import './styles/aiAssistant.css';
 
 // Import router
 import { addRoute, setNotFound, initRouter } from './utils/router.js';
@@ -16,6 +17,7 @@ import { initTheme } from './utils/themeService.js';
 import { renderNavbar, initNavbar } from './components/navbar/navbar.js';
 import { renderFooter, initFooter } from './components/footer/footer.js';
 import { renderAiAssistant, initAiAssistant } from './components/aiAssistant/aiAssistant.js';
+import { renderCompareBar, initCompareBar } from './components/compareBar/compareBar.js';
 
 // Import pages
 import { renderHomePage, initHomePage } from './pages/home/home.js';
@@ -42,6 +44,7 @@ function renderLayout() {
         <div id="router-outlet" class="flex-grow-1"></div>
         <div id="footer-container">${renderFooter()}</div>
         <div id="ai-assistant-container">${renderAiAssistant()}</div>
+        <div id="compare-bar-container">${renderCompareBar()}</div>
         <!-- Global Toast Container -->
         <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1090"></div>
     `;
@@ -54,6 +57,9 @@ function renderLayout() {
 
     // Initialize AI assistant
     initAiAssistant();
+
+    // Initialize Compare Bar
+    initCompareBar();
 }
 
 /**
