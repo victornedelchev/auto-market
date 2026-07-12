@@ -704,7 +704,11 @@ async function handleEditSubmit(e, id) {
         showToast('Listing updated successfully!', 'success');
         
         setTimeout(() => {
-            navigateTo('/profile');
+            if (isAdminUser()) {
+                navigateTo('/admin');
+            } else {
+                navigateTo('/profile');
+            }
         }, 1500);
 
     } catch (err) {
@@ -793,7 +797,11 @@ async function handleDeleteListing(id) {
         if (error) throw error;
 
         showToast('Listing deleted successfully.', 'success');
-        navigateTo('/profile');
+        if (isAdminUser()) {
+            navigateTo('/admin');
+        } else {
+            navigateTo('/profile');
+        }
     } catch (err) {
         console.error(err);
         showToast('Failed to delete listing: ' + (err.message || 'Unknown error'), 'danger');
