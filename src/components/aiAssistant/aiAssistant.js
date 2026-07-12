@@ -102,4 +102,24 @@ export function initAiAssistant() {
             }, 10);
         });
     });
+
+    // Reset modal state when closed
+    const modalEl = document.getElementById('aiAssistantModal');
+    if (modalEl) {
+        modalEl.addEventListener('hidden.bs.modal', () => {
+            // Hide the answer container
+            answerContainer.classList.add('d-none');
+            answerText.innerHTML = '';
+            
+            // Reset all buttons to default state
+            buttons.forEach(b => {
+                b.classList.remove('bg-primary', 'text-white', 'border-primary');
+                const icon = b.querySelector('i');
+                if(icon) {
+                    icon.classList.remove('text-white');
+                    icon.classList.add('text-primary');
+                }
+            });
+        });
+    }
 }
