@@ -704,11 +704,7 @@ async function handleEditSubmit(e, id) {
         showToast('Listing updated successfully!', 'success');
         
         setTimeout(() => {
-            if (isAdminUser()) {
-                navigateTo('/admin');
-            } else {
-                navigateTo('/profile');
-            }
+            navigateTo('/profile');
         }, 1500);
 
     } catch (err) {
