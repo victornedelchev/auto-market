@@ -103,7 +103,7 @@ export function renderFooter() {
         </div>
 
         <!-- Subscription Modal -->
-        <div class="modal fade" id="newsletter-modal" tabindex="-1" aria-labelledby="newsletterModalLabel" aria-hidden="true" data-bs-theme="light">
+        <div class="modal fade" id="newsletter-modal" tabindex="-1" aria-labelledby="newsletterModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content" style="border: none; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.3);">
                     <div style="background: var(--am-gradient-primary); padding: 2rem 1.5rem; text-align: center; position: relative;">
@@ -113,12 +113,12 @@ export function renderFooter() {
                         </div>
                         <h4 class="modal-title text-white fw-bold mb-0" id="newsletterModalLabel" style="font-family: var(--am-font-display);">Subscription Successful!</h4>
                     </div>
-                    <div class="modal-body text-center p-4" style="background: #fff; color: var(--am-dark);">
+                    <div class="modal-body text-center p-4">
                         <p class="text-muted mb-2" style="font-size: 1.1rem;">You're now on the list.</p>
                         <p style="font-size: 1.05rem; margin-bottom: 1rem;">We've sent a confirmation to <br><strong id="subscribed-email-display" style="color: var(--am-primary); font-size: 1.15rem;"></strong></p>
                         <p class="text-muted small mt-3 mb-0">Get ready for the best car deals straight to your inbox.</p>
                     </div>
-                    <div class="modal-footer border-0 pb-4 justify-content-center" style="background: #fff;">
+                    <div class="modal-footer border-0 pb-4 justify-content-center">
                         <button type="button" class="btn btn-am-primary px-4 py-2" data-bs-dismiss="modal" style="border-radius: var(--am-radius-sm);">Awesome, thanks!</button>
                     </div>
                 </div>
@@ -161,6 +161,9 @@ export function renderFooter() {
             color: #fff;
             border-color: var(--am-primary);
             transform: translateY(-2px);
+        }
+        #footer-newsletter-email::placeholder {
+            color: rgba(255, 255, 255, 0.5);
         }
     </style>`;
 }
