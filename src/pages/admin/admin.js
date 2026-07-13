@@ -277,6 +277,34 @@ export function initAdminPage() {
     loadUsers();
     loadListings();
 
+    const closeDropdowns = () => {
+        import('bootstrap').then(({ Dropdown }) => {
+            document.querySelectorAll('.dropdown-toggle.show').forEach(el => {
+                const d = Dropdown.getInstance(el);
+                if (d) d.hide();
+            });
+        });
+    };
+
+    if (window._adminDropdownClickHndl) {
+        document.removeEventListener('click', window._adminDropdownClickHndl);
+    }
+    if (window._adminDropdownBlurHndl) {
+        window.removeEventListener('blur', window._adminDropdownBlurHndl);
+    }
+
+    window._adminDropdownClickHndl = (e) => {
+        if (!e.target.closest('.dropdown-toggle') && !e.target.closest('.dropdown-menu')) {
+            closeDropdowns();
+        }
+    };
+    window._adminDropdownBlurHndl = () => {
+        closeDropdowns();
+    };
+
+    document.addEventListener('click', window._adminDropdownClickHndl);
+    window.addEventListener('blur', window._adminDropdownBlurHndl);
+
     // Event delegation for users table
     document.getElementById('admin-users-tbody')?.addEventListener('click', async (e) => {
         const toggleBtn = e.target.closest('.dropdown-toggle');
