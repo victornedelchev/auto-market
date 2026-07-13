@@ -298,7 +298,7 @@ export async function initDetailsPage(params = {}) {
                     'Delete Listing',
                     'Are you sure you want to delete this listing? This action cannot be undone.',
                     'Delete',
-                    'primary'
+                    'danger'
                 );
                 
                 if (confirmed) {
