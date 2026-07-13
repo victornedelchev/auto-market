@@ -159,6 +159,57 @@ h1, h2, h3, h4, h5, h6 {
     color: var(--am-white);
 }
 
+.btn-am-danger {
+    background: linear-gradient(135deg, var(--am-danger) 0%, #b91c1c 100%);
+    color: var(--am-white);
+    border: none;
+    border-radius: var(--am-radius-sm);
+    padding: 0.6rem 1.5rem;
+    font-weight: 600;
+    transition: var(--am-transition);
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
+}
+
+.btn-am-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.45);
+    color: var(--am-white);
+}
+
+.btn-am-success {
+    background: linear-gradient(135deg, var(--am-success) 0%, #16a34a 100%);
+    color: var(--am-white);
+    border: none;
+    border-radius: var(--am-radius-sm);
+    padding: 0.6rem 1.5rem;
+    font-weight: 600;
+    transition: var(--am-transition);
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+}
+
+.btn-am-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
+    color: var(--am-white);
+}
+
+.btn-am-warning {
+    background: linear-gradient(135deg, var(--am-warning) 0%, #d97706 100%);
+    color: var(--am-white);
+    border: none;
+    border-radius: var(--am-radius-sm);
+    padding: 0.6rem 1.5rem;
+    font-weight: 600;
+    transition: var(--am-transition);
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
+}
+
+.btn-am-warning:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.45);
+    color: var(--am-white);
+}
+
 .btn-am-outline {
     background: transparent;
     color: var(--am-primary);
@@ -197,6 +248,9 @@ h1, h2, h3, h4, h5, h6 {
 .btn-am-primary:active,
 .btn-am-accent:active,
 .btn-am-info:active,
+.btn-am-danger:active,
+.btn-am-success:active,
+.btn-am-warning:active,
 .btn-am-outline:active,
 .btn-am-ghost:active {
     transform: scale(0.96) translateY(0);
@@ -928,10 +982,15 @@ input[type="file"]::file-selector-button:active {
 [data-theme="dark"] .modal-content {
     background-color: #1e293b;
     border-color: #334155;
+    color: var(--am-dark);
 }
 [data-theme="dark"] .modal-header,
 [data-theme="dark"] .modal-footer {
     border-color: #334155;
+    color: var(--am-dark);
+}
+[data-theme="dark"] .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
 }
 
 /* Filter sections and custom borders */
@@ -984,4 +1043,74 @@ input[type="file"]::file-selector-button:active {
 }
 [data-theme="dark"] .breadcrumb-item + .breadcrumb-item::before {
     color: var(--am-gray) !important;
+}
+
+/* ── Modals, Cards, and AI Assistant Dark Theme Fixes ── */
+[data-theme="dark"] .bg-light,
+[data-theme="dark"] .bg-white {
+    background-color: #1e293b !important;
+}
+
+[data-theme="dark"] .text-dark {
+    color: var(--am-dark) !important;
+}
+
+[data-theme="dark"] .card {
+    background-color: #1e293b;
+    border-color: #334155;
+}
+
+[data-theme="dark"] .card-header,
+[data-theme="dark"] .card-footer {
+    background-color: #334155;
+    border-color: #334155;
+    color: var(--am-dark) !important;
+}
+
+[data-theme="dark"] .card-body {
+    color: var(--am-dark);
+}
+
+[data-theme="dark"] .list-group-item {
+    background-color: #1e293b;
+    border-color: #334155;
+    color: #e2e8f0;
+}
+
+[data-theme="dark"] .list-group-item:hover,
+[data-theme="dark"] .list-group-item:focus {
+    background-color: #334155;
+    color: #f8fafc;
+}
+
+[data-theme="dark"] .badge.bg-light {
+    background-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] #compare-floating-bar {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+}
+
+/* Ensure text remains white on dark gradient backgrounds in dark mode */
+[data-theme="dark"] .auth-card .auth-header,
+[data-theme="dark"] .auth-card .auth-header h2,
+[data-theme="dark"] .auth-card .auth-header p,
+[data-theme="dark"] .auth-card .auth-header i,
+[data-theme="dark"] .btn-am-primary,
+[data-theme="dark"] .btn-am-accent,
+[data-theme="dark"] .btn-am-info,
+[data-theme="dark"] .btn-am-danger,
+[data-theme="dark"] .btn-am-success,
+[data-theme="dark"] .btn-am-warning,
+[data-theme="dark"] .btn-am-ghost {
+    color: #ffffff !important;
+}
+
+/* Ensure placeholders are readable in dark mode */
+[data-theme="dark"] ::placeholder,
+[data-theme="dark"] .form-control::placeholder {
+    color: #94a3b8 !important;
+    opacity: 0.8 !important;
 }

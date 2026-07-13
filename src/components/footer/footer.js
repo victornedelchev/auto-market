@@ -5,6 +5,7 @@
 
 import { showToast } from '../../utils/toastService.js';
 import { Modal } from 'bootstrap';
+import { showLegalModal } from '../../utils/modalService.js';
 
 /**
  * Render the footer HTML.
@@ -95,8 +96,8 @@ export function renderFooter() {
                     &copy; ${year} AutoMarket AI. All rights reserved.
                 </p>
                 <div class="d-flex gap-3">
-                    <a href="#" style="color: rgba(255,255,255,0.35); font-size: 0.82rem; text-decoration: none;">Privacy Policy</a>
-                    <a href="#" style="color: rgba(255,255,255,0.35); font-size: 0.82rem; text-decoration: none;">Terms of Service</a>
+                    <a href="#" class="legal-link" data-type="privacy" style="color: rgba(255,255,255,0.35); font-size: 0.82rem; text-decoration: none;">Privacy Policy</a>
+                    <a href="#" class="legal-link" data-type="tos" style="color: rgba(255,255,255,0.35); font-size: 0.82rem; text-decoration: none;">Terms of Service</a>
                 </div>
             </div>
         </div>
@@ -202,6 +203,19 @@ export function initFooter() {
                 e.preventDefault();
                 btn.click();
             }
+        });
+    }
+
+    const footerEl = document.querySelector('footer');
+    if (footerEl) {
+        footerEl.querySelectorAll('.legal-link').forEach(link => {
+            // Remove old listeners to prevent duplicates if init is called multiple times
+            const newLink = link.cloneNode(true);
+            link.parentNode.replaceChild(newLink, link);
+            newLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                showLegalModal(e.currentTarget.dataset.type);
+            });
         });
     }
 }

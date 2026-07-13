@@ -6,6 +6,7 @@
 import { register } from '../../services/authService.js';
 import { navigateTo } from '../../utils/router.js';
 import { showToast } from '../../utils/toastService.js';
+import { showLegalModal } from '../../utils/modalService.js';
 
 /**
  * Render the register page.
@@ -94,8 +95,8 @@ export function renderRegisterPage() {
                     <div class="form-check mb-3">
                         <input class="form-check-input" type="checkbox" id="register-terms" required>
                         <label class="form-check-label" for="register-terms" style="font-size: 0.85rem; color: var(--am-gray);">
-                            I agree to the <a href="#" style="color: var(--am-primary); text-decoration: none; font-weight: 500;">Terms of Service</a>
-                            and <a href="#" style="color: var(--am-primary); text-decoration: none; font-weight: 500;">Privacy Policy</a>
+                            I agree to the <a href="#" class="legal-link" data-type="tos" style="color: var(--am-primary); text-decoration: none; font-weight: 500;">Terms of Service</a>
+                            and <a href="#" class="legal-link" data-type="privacy" style="color: var(--am-primary); text-decoration: none; font-weight: 500;">Privacy Policy</a>
                         </label>
                     </div>
                     <div class="d-grid mb-3">
@@ -130,6 +131,13 @@ export function initRegisterPage() {
     if (passwordInput) {
         passwordInput.addEventListener('input', updatePasswordStrength);
     }
+
+    form.querySelectorAll('.legal-link').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            showLegalModal(e.currentTarget.dataset.type);
+        });
+    });
 }
 
 /**
