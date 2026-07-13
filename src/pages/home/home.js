@@ -23,7 +23,7 @@ export function renderHomePage() {
                 <div class="col-lg-7">
                     <div class="d-inline-flex align-items-center gap-2 mb-3 px-3 py-1 anim-slide-up" style="background: rgba(37,99,235,0.15); border-radius: 99px; border: 1px solid rgba(37,99,235,0.25);">
                         <span class="pulse-dot"></span>
-                        <span style="color: var(--am-primary-200); font-size: 0.85rem; font-weight: 500;">1,200+ live listings</span>
+                        <span id="hero-live-listings-count" style="color: var(--am-primary-200); font-size: 0.85rem; font-weight: 500;">1,200+ live listings</span>
                     </div>
 
                     <h1 class="anim-slide-up delay-100" style="font-family: var(--am-font-display); font-weight: 900; font-size: clamp(2.2rem, 5vw, 3.5rem); color: #fff; line-height: 1.1; margin-bottom: 1.25rem;">
@@ -226,6 +226,10 @@ export async function initHomePage() {
             const listingsCounter = document.querySelector('.stat-counter[data-target="1.2K+"]');
             if (listingsCounter) {
                 listingsCounter.setAttribute('data-target', count.toString());
+            }
+            const heroListingsCount = document.getElementById('hero-live-listings-count');
+            if (heroListingsCount) {
+                heroListingsCount.textContent = `${count} live listings`;
             }
         }
 
