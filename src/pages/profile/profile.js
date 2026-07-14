@@ -9,6 +9,7 @@ import { getListingsByUser } from '../../services/listingService.js';
 import { getListingImageUrls } from '../../services/storageService.js';
 import { renderListingCard } from '../../components/listingCard/listingCard.js';
 import { showToast } from '../../utils/toastService.js';
+import { showConfirmModal } from '../../utils/modalService.js';
 import { initScrollAnimations } from '../../utils/animations.js';
 
 let currentListingsPage = 1;
@@ -467,7 +468,7 @@ async function handleSaveProfile(e, user, profile, stats) {
         initScrollAnimations();
         loadUserListings(currentListingsPage);
 
-        toggleEditSection(true);
+        toggleEditSection(false);
         showToast('Profile updated successfully!', 'success');
     } catch (err) {
         showToast('An unexpected error occurred.', 'danger');
@@ -479,6 +480,15 @@ async function handleSaveProfile(e, user, profile, stats) {
  * Handle remove avatar.
  */
 async function handleRemoveAvatar(user, profile, stats) {
+    const isConfirmed = await showConfirmModal(
+        'Remove Profile Picture',
+        'Are you sure you want to delete your profile picture?',
+        'Delete',
+        'danger'
+    );
+
+    if (!isConfirmed) return;
+
     const removeBtn = document.getElementById('remove-avatar-btn');
     if (removeBtn) {
         removeBtn.disabled = true;
