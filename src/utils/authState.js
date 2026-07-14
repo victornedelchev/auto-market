@@ -37,6 +37,9 @@ export async function initAuth() {
 
   // Subscribe to future auth events (login, logout, token refresh)
   onAuthStateChange(async (_event, session) => {
+    if (_event === 'SIGNED_IN' || _event === 'SIGNED_OUT') {
+        sessionStorage.removeItem('browse_state');
+    }
     currentUser = session?.user ?? null;
     if (currentUser) {
         const { data: profile } = await getProfile(currentUser.id);
