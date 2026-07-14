@@ -64,7 +64,7 @@ export function renderSearchFilters() {
                             <label for="filter-fuel" class="form-label">Fuel Type</label>
                             <select class="form-select" id="filter-fuel">
                                 <option value="">All</option>
-                                <option value="petrol">Petrol</option>
+                                <option value="gasoline">Gasoline</option>
                                 <option value="diesel">Diesel</option>
                                 <option value="electric">Electric</option>
                                 <option value="hybrid">Hybrid</option>
